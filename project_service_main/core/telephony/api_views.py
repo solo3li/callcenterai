@@ -116,6 +116,25 @@ def livekit_webhook(request):
                     }
                     cent_client.publish(channel, payload)
                     
+        if event == 'egress_ended':
+            egress_info = data.get('egressInfo', data.get('egress', {}))
+            status = egress_info.get('status')
+            
+            if status == 3: # EGRESS_COMPLETE
+                room_name = egress_info.get('roomName')
+                file_results = egress_info.get('fileResults', [])
+                
+                if room_name and file_results:
+                    from campaigns.inngest_client import inngest_client
+                    inngest_client.send_sync({
+                        "name": "analytics/process_recording",
+                        "data": {
+                            "room_name": room_name,
+                            "egress_id": egress_info.get('egressId'),
+                            "files": [f.get('filename') for f in file_results]
+                        }
+                    })
+                    
         return JsonResponse({"status": "ok"})
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
