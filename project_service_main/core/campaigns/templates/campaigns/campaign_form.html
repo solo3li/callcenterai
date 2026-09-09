@@ -1,0 +1,15 @@
+{% extends "core/base.html" %}
+
+{% block title %}Create Campaign{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>Create Outbound Campaign</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Save Campaign</button>
+        <a href="{% url 'campaign-list' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

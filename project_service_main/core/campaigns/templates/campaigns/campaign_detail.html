@@ -1,0 +1,41 @@
+{% extends "core/base.html" %}
+
+{% block title %}Campaign: {{ campaign.name }}{% endblock %}
+
+{% block content %}
+<div class="header-actions">
+    <h2>{{ campaign.name }}</h2>
+    {% if campaign.status == 'DRAFT' or campaign.status == 'PAUSED' %}
+    <form method="post" action="{% url 'campaign-start' campaign.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary">▶ Start Campaign (Inngest)</button>
+    </form>
+    {% else %}
+        <span class="badge badge-success">Running</span>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3>Campaign Leads</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Phone Number</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lead in leads %}
+            <tr>
+                <td>{{ lead.phone_number }}</td>
+                <td>{{ lead.status }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="2" class="text-center">No leads in this campaign. Upload CSV (Coming Soon).</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

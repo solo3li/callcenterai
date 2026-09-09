@@ -1,0 +1,41 @@
+{% extends "core/base.html" %}
+
+{% block title %}Outbound Campaigns{% endblock %}
+
+{% block content %}
+<div class="header-actions">
+    <h2>🚀 Outbound Campaigns</h2>
+    <a href="{% url 'campaign-create' %}" class="btn btn-primary">+ Create Campaign</a>
+</div>
+
+<div class="card">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>AI Agent</th>
+                <th>SIP Trunk</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for campaign in campaigns %}
+            <tr>
+                <td>{{ campaign.name }}</td>
+                <td>{{ campaign.agent_group.name }}</td>
+                <td>{{ campaign.sip_trunk.name }}</td>
+                <td><span class="badge badge-{{ campaign.status|lower }}">{{ campaign.status }}</span></td>
+                <td>
+                    <a href="{% url 'campaign-detail' campaign.id %}" class="btn btn-secondary">View</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center">No campaigns found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'customers',
     'audit',
     'telephony',
+    'campaigns',
 ]
 
 AUTH_USER_MODEL = 'users.User'

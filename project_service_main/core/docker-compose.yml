@@ -31,5 +31,12 @@ services:
     depends_on:
       - db
 
+  inngest:
+    image: inngest/inngest:latest
+    ports:
+      - "8288:8288"
+    environment:
+      - INNGEST_DEV=1
+
 volumes:
   postgres_data:

@@ -15,6 +15,7 @@ urlpatterns = [
     path('agents/', include('agents.urls')),
     path('settings/', include('organizations.urls')),
     path('telephony/', include('telephony.urls')),
+    path('campaigns/', include('campaigns.urls')),
     
     # Dashboard
     path('', DashboardView.as_view(), name='dashboard'),
