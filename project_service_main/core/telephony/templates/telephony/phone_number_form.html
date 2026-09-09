@@ -6,11 +6,25 @@
     <form method="post">
         {% csrf_token %}
         
-        <div class="form-group">
-            <label class="form-label" for="id_number">Phone Number</label>
-            <input class="form-control" type="text" name="number" id="id_number" value="{{ form.number.value|default_if_none:'' }}" placeholder="+1234567890" required>
-            <small style="color: var(--text-secondary); display: block; margin-top: 4px;">Enter the number in E.164 format (e.g. +1234567890).</small>
+        <div class="form-group" style="display: flex; gap: 16px;">
+            <div style="flex: 1;">
+                <label class="form-label" for="id_number">Phone Number</label>
+                <input class="form-control" type="text" name="number" id="id_number" value="{{ form.number.value|default_if_none:'' }}" placeholder="+1234567890" required>
+            </div>
+            <div style="flex: 1;">
+                <label class="form-label" for="id_sip_trunk">SIP Trunk</label>
+                <select class="form-control" name="sip_trunk" id="id_sip_trunk" required>
+                    <option value="" disabled {% if not form.sip_trunk.value %}selected{% endif %}>Select SIP Trunk...</option>
+                    {% for trunk in form.fields.sip_trunk.queryset %}
+                        <option value="{{ trunk.pk }}" {% if form.sip_trunk.value|stringformat:"s" == trunk.pk|stringformat:"s" %}selected{% endif %}>
+                            {{ trunk.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <p style="font-size: 0.85em; color: var(--text-secondary); margin-top: 4px;">Must have a SIP Trunk configured first.</p>
+            </div>
         </div>
+        <small style="color: var(--text-secondary); display: block; margin-top: 4px;">Enter the number in E.164 format (e.g. +1234567890).</small>
 
         <div class="form-group">
             <label class="form-label" for="id_group">Route to Agent Group</label>

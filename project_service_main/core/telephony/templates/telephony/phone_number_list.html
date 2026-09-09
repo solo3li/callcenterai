@@ -12,7 +12,8 @@
         <thead style="background-color: var(--bg-color); border-bottom: 1px solid var(--border-color);">
             <tr>
                 <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">Number</th>
-                <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">Routing Group</th>
+                <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">SIP Trunk</th>
+                <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">Routed To (Group)</th>
                 <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">Status</th>
                 <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">Actions</th>
             </tr>
@@ -21,6 +22,7 @@
             {% for number in phone_numbers %}
             <tr style="border-bottom: 1px solid var(--border-color);">
                 <td style="padding: 16px 24px; font-weight: 500; font-family: monospace; font-size: 1.1em;">{{ number.number }}</td>
+                <td style="padding: 16px 24px; color: var(--text-secondary);">{{ number.sip_trunk.name }}</td>
                 <td style="padding: 16px 24px; color: var(--text-secondary);">
                     {% if number.group %}
                         <a href="{% url 'agent_group_update' number.group.pk %}" style="text-decoration: none; color: var(--accent-color);">

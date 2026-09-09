@@ -1,0 +1,55 @@
+{% extends 'core/base.html' %}
+{% block page_title %}{% if object %}Edit SIP Trunk{% else %}Add SIP Trunk{% endif %}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px;">
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group" style="display: flex; gap: 16px;">
+            <div style="flex: 1;">
+                <label class="form-label" for="id_name">Name</label>
+                <input class="form-control" type="text" name="name" id="id_name" value="{{ form.name.value|default_if_none:'' }}" placeholder="e.g. Twilio Primary" required>
+            </div>
+            <div style="flex: 1;">
+                <label class="form-label" for="id_provider">Provider (Optional)</label>
+                <input class="form-control" type="text" name="provider" id="id_provider" value="{{ form.provider.value|default_if_none:'' }}" placeholder="e.g. Twilio, Vonage">
+            </div>
+        </div>
+
+        <div class="form-group" style="display: flex; gap: 16px;">
+            <div style="flex: 3;">
+                <label class="form-label" for="id_host">SIP Host / IP Address</label>
+                <input class="form-control" type="text" name="host" id="id_host" value="{{ form.host.value|default_if_none:'' }}" placeholder="sip.provider.com" required>
+            </div>
+            <div style="flex: 1;">
+                <label class="form-label" for="id_port">Port</label>
+                <input class="form-control" type="number" name="port" id="id_port" value="{{ form.port.value|default_if_none:'5060' }}" required>
+            </div>
+        </div>
+
+        <h5 style="margin-top: 32px; margin-bottom: 16px; color: var(--text-secondary);">Authentication (Optional)</h5>
+        
+        <div class="form-group" style="display: flex; gap: 16px;">
+            <div style="flex: 1;">
+                <label class="form-label" for="id_username">Username</label>
+                <input class="form-control" type="text" name="username" id="id_username" value="{{ form.username.value|default_if_none:'' }}">
+            </div>
+            <div style="flex: 1;">
+                <label class="form-label" for="id_password">Password</label>
+                <input class="form-control" type="password" name="password" id="id_password" value="{{ form.password.value|default_if_none:'' }}">
+            </div>
+        </div>
+
+        <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 24px;">
+            <input type="checkbox" name="is_active" id="id_is_active" {% if form.is_active.value or not object %}checked{% endif %}>
+            <label class="form-label" for="id_is_active" style="margin: 0;">Is Active</label>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 32px;">
+            <button type="submit" class="btn btn-primary">Save SIP Trunk</button>
+            <a href="{% url 'sip_trunk_list' %}" class="btn" style="background: var(--bg-color); color: var(--text-primary);">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

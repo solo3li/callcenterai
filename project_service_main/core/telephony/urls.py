@@ -10,4 +10,10 @@ urlpatterns = [
     
     # APIs
     path('api/inbound-webhook/', api_views.inbound_webhook, name='inbound_webhook'),
+
+    # SIP Trunks
+    path('trunks/', views.SIPTrunkListView.as_view(), name='sip_trunk_list'),
+    path('trunks/new/', views.SIPTrunkCreateView.as_view(), name='sip_trunk_create'),
+    path('trunks/<int:pk>/edit/', views.SIPTrunkUpdateView.as_view(), name='sip_trunk_update'),
+    path('trunks/<int:pk>/delete/', views.SIPTrunkDeleteView.as_view(), name='sip_trunk_delete'),
 ]

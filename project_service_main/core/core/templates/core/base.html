@@ -25,8 +25,12 @@
                 <li class="nav-item">
                     <a href="{% url 'agent_group_list' %}" class="nav-link" style="padding-left: 24px; font-size: 0.9em;">- Groups</a>
                 </li>
+                <li class="nav-item" style="margin-top: 16px; font-size: 0.8em; text-transform: uppercase; color: var(--text-secondary); padding: 0 16px;">Telephony</li>
                 <li class="nav-item">
-                    <a href="{% url 'phone_number_list' %}" class="nav-link" style="color: var(--accent-color);">📞 Phone Numbers</a>
+                    <a href="{% url 'sip_trunk_list' %}" class="nav-link" style="color: var(--accent-color);">🔌 SIP Trunks</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'phone_number_list' %}" class="nav-link" style="padding-left: 24px; font-size: 0.9em;">- Phone Numbers</a>
                 </li>
                 <li class="nav-item">
                     <a href="{% url 'customer_list' %}" class="nav-link">Customers</a>
