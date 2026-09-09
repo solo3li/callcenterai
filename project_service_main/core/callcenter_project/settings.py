@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'campaigns',
     'analytics',
     'knowledge_base',
+    'actions_engine',
 ]
 
 AUTH_USER_MODEL = 'users.User'

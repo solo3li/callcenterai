@@ -18,6 +18,7 @@ urlpatterns = [
     path('campaigns/', include('campaigns.urls')),
     path('analytics/', include('analytics.urls')),
     path('knowledge/', include('knowledge_base.urls')),
+    path('actions/', include('actions_engine.urls')),
     
     # Dashboard
     path('', DashboardView.as_view(), name='dashboard'),

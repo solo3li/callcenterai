@@ -55,6 +55,12 @@ class AIAgent(TenantAwareModel):
         related_name='ai_agents',
         help_text="Select specific knowledge base documents this AI agent is allowed to search."
     )
+    actions = models.ManyToManyField(
+        'actions_engine.ActionDefinition',
+        blank=True,
+        related_name='ai_agents',
+        help_text="Select specific dynamic actions this AI agent is allowed to execute."
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

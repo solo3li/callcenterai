@@ -39,6 +39,7 @@ def inbound_webhook(request):
                 "room_name": room_name,
                 "caller_number": caller_number,
                 "called_number": called_number,
+                "agent_id": ai.id,
                 "system_prompt": ai.system_prompt,
                 "voice": ai.gemini_voice,
                 "language": ai.language,
