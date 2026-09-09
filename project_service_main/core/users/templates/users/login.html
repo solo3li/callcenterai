@@ -1,0 +1,33 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | AI Call Center</title>
+    <link rel="stylesheet" href="{% static 'core/css/style.css' %}">
+</head>
+<body class="bg-color">
+    <div class="auth-layout">
+        <div class="card auth-card">
+            <h2 class="mb-4" style="text-align: center; color: var(--primary-color);">AI Call Center</h2>
+            <p class="text-muted mb-4" style="text-align: center;">Sign in to your account</p>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label" for="username">Username</label>
+                    <input class="form-control" type="text" id="username" name="username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input class="form-control" type="password" id="password" name="password" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">Sign In</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
