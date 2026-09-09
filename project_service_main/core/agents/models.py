@@ -54,3 +54,20 @@ class AIAgent(TenantAwareModel):
 
     def __str__(self):
         return self.name
+
+from django.conf import settings
+
+AGENT_STATES = [
+    ('AVAILABLE', 'Available'),
+    ('BUSY', 'Busy'),
+    ('OFFLINE', 'Offline'),
+    ('ON_BREAK', 'On Break'),
+]
+
+class AgentProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='agent_profile')
+    state = models.CharField(max_length=20, choices=AGENT_STATES, default='OFFLINE')
+    last_state_change = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.state}"

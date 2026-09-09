@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import api_views
 
 urlpatterns = [
     path('', views.AgentListView.as_view(), name='agent_list'),
@@ -18,4 +19,8 @@ urlpatterns = [
     path('ai-agents/new/', views.AIAgentCreateView.as_view(), name='ai_agent_create'),
     path('ai-agents/<int:pk>/edit/', views.AIAgentUpdateView.as_view(), name='ai_agent_update'),
     path('ai-agents/<int:pk>/delete/', views.AIAgentDeleteView.as_view(), name='ai_agent_delete'),
+
+    # API endpoints for Human Support (Phase 5)
+    path('api/me/state/', api_views.AgentStateAPIView.as_view(), name='api_agent_state'),
+    path('api/transfer/', api_views.TransferCallAPIView.as_view(), name='api_agent_transfer'),
 ]
