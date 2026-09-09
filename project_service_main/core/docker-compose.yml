@@ -38,5 +38,15 @@ services:
     environment:
       - INNGEST_DEV=1
 
+  centrifugo:
+    image: centrifugo/centrifugo:v5
+    container_name: centrifugo
+    volumes:
+      - ./centrifugo.json:/centrifugo/config.json
+    command: centrifugo -c config.json
+    ports:
+      - "8001:8000"
+    restart: unless-stopped
+
 volumes:
   postgres_data:

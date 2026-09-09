@@ -109,6 +109,16 @@ if os.environ.get('USE_POSTGRES') == 'True':
         'PORT': os.environ.get('POSTGRES_PORT', '5432'),
     }
 
+# Telephony & AI Integration Settings
+REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+LIVEKIT_URL = os.environ.get('LIVEKIT_URL', 'http://localhost:7880')
+LIVEKIT_API_KEY = os.environ.get('LIVEKIT_API_KEY', 'devkey')
+LIVEKIT_API_SECRET = os.environ.get('LIVEKIT_API_SECRET', 'secret')
+
+CENTRIFUGO_URL = os.environ.get('CENTRIFUGO_URL', 'http://localhost:8001/api')
+CENTRIFUGO_API_KEY = os.environ.get('CENTRIFUGO_API_KEY', 'api_key')
+CENTRIFUGO_SECRET = os.environ.get('CENTRIFUGO_SECRET', 'my_secret')
+
 # REST Framework Configuration
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [

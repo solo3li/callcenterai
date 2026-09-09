@@ -9,7 +9,8 @@ urlpatterns = [
     path('numbers/<int:pk>/delete/', views.PhoneNumberDeleteView.as_view(), name='phone_number_delete'),
     
     # APIs
-    path('api/inbound-webhook/', api_views.inbound_webhook, name='inbound_webhook'),
+    path('api/inbound-webhook/', api_views.inbound_webhook, name='inbound-webhook'),
+    path('api/livekit-webhook/', api_views.livekit_webhook, name='livekit-webhook'),
 
     # SIP Trunks
     path('trunks/', views.SIPTrunkListView.as_view(), name='sip_trunk_list'),

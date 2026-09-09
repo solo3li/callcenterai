@@ -59,3 +59,63 @@ def inbound_webhook(request):
         
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+@csrf_exempt
+@require_POST
+def livekit_webhook(request):
+    """
+    Receives webhooks from LiveKit Server (e.g. participant_joined, participant_left).
+    Updates CampaignLead status and publishes to Centrifugo for Real-time UI.
+    """
+    try:
+        # In production, verify LiveKit Webhook signature using `livekit_api.WebhookReceiver`
+        data = json.loads(request.body)
+        event = data.get('event')
+        room = data.get('room', {})
+        participant = data.get('participant', {})
+        
+        room_name = room.get('name', '')
+        
+        # We only care about outbound campaign rooms
+        if room_name.startswith('outbound_'):
+            parts = room_name.split('_')
+            if len(parts) >= 3:
+                campaign_id = parts[1]
+                lead_id = parts[2]
+                
+                from campaigns.models import CampaignLead
+                from cent import Client
+                
+                try:
+                    lead = CampaignLead.objects.get(id=lead_id)
+                except CampaignLead.DoesNotExist:
+                    return JsonResponse({"status": "ignored", "reason": "lead_not_found"})
+                
+                new_status = None
+                
+                # Assume the SIP participant connects and triggers participant_joined
+                if event == 'participant_joined' and participant.get('identity', '').startswith('sip_'):
+                    new_status = 'ANSWERED'
+                elif event == 'participant_left' and participant.get('identity', '').startswith('sip_'):
+                    new_status = 'COMPLETED'
+                elif event == 'room_finished':
+                    # If room finishes and lead wasn't answered, it failed
+                    if lead.status != 'ANSWERED' and lead.status != 'COMPLETED':
+                        new_status = 'FAILED'
+                        
+                if new_status:
+                    lead.status = new_status
+                    lead.save()
+                    
+                    # Publish to Centrifugo
+                    cent_client = Client(settings.CENTRIFUGO_URL, api_key=settings.CENTRIFUGO_API_KEY)
+                    channel = f"campaign_{campaign_id}"
+                    payload = {
+                        "lead_id": lead.id,
+                        "status": new_status
+                    }
+                    cent_client.publish(channel, payload)
+                    
+        return JsonResponse({"status": "ok"})
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)

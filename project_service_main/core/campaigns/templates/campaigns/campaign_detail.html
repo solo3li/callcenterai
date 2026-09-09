@@ -5,18 +5,28 @@
 {% block content %}
 <div class="header-actions">
     <h2>{{ campaign.name }}</h2>
-    {% if campaign.status == 'DRAFT' or campaign.status == 'PAUSED' %}
-    <form method="post" action="{% url 'campaign-start' campaign.id %}">
+    {% if campaign.status == 'DRAFT' or campaign.status == 'PAUSED' or campaign.status == 'COMPLETED' %}
+    <form method="post" action="{% url 'campaign-start' campaign.id %}" style="display:inline;">
         {% csrf_token %}
         <button type="submit" class="btn btn-primary">▶ Start Campaign (Inngest)</button>
     </form>
     {% else %}
-        <span class="badge badge-success">Running</span>
+        <span class="badge badge-success" style="font-size:1.2em; padding:10px;">🟢 Running</span>
     {% endif %}
 </div>
 
+<div class="card" style="margin-bottom: 20px;">
+    <h3>Upload Leads</h3>
+    <form method="post" action="{% url 'campaign-upload-leads' campaign.id %}" enctype="multipart/form-data" style="display:flex; gap:10px; align-items:center;">
+        {% csrf_token %}
+        <input type="file" name="csv_file" accept=".csv" required class="form-control" style="max-width: 300px;">
+        <button type="submit" class="btn btn-secondary">Upload CSV</button>
+    </form>
+    <small style="color:var(--text-secondary);">CSV should have Phone Number in the first column.</small>
+</div>
+
 <div class="card">
-    <h3>Campaign Leads</h3>
+    <h3>Campaign Leads <span class="badge badge-primary">{{ leads|length }} Total</span></h3>
     <table class="table">
         <thead>
             <tr>
@@ -24,18 +34,71 @@
                 <th>Status</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody id="leads-table-body">
             {% for lead in leads %}
-            <tr>
+            <tr id="lead-row-{{ lead.id }}">
                 <td>{{ lead.phone_number }}</td>
-                <td>{{ lead.status }}</td>
+                <td>
+                    <span class="lead-status badge 
+                        {% if lead.status == 'PENDING' %}badge-secondary
+                        {% elif lead.status == 'CALLING' %}badge-warning
+                        {% elif lead.status == 'ANSWERED' %}badge-success
+                        {% else %}badge-danger{% endif %}
+                    ">
+                        {{ lead.status }}
+                    </span>
+                </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="2" class="text-center">No leads in this campaign. Upload CSV (Coming Soon).</td>
+                <td colspan="2" class="text-center">No leads in this campaign yet. Upload a CSV file above.</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
+
+<!-- Centrifugo Real-time Integration -->
+<script src="https://unpkg.com/centrifuge@5.0.1/dist/centrifuge.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Initialize Centrifuge
+        const centrifuge = new Centrifuge("{{ centrifugo_url }}", {
+            token: "{{ centrifugo_token }}"
+        });
+
+        centrifuge.on('connecting', function(ctx){
+            console.log(`connecting: ${ctx.code}, ${ctx.reason}`);
+        }).on('connected', function(ctx){
+            console.log(`connected over ${ctx.transport}`);
+        }).on('disconnected', function(ctx){
+            console.log(`disconnected: ${ctx.code}, ${ctx.reason}`);
+        }).connect();
+
+        // Subscribe to the specific campaign channel
+        const sub = centrifuge.newSubscription("{{ channel_name }}");
+
+        sub.on('publication', function(ctx) {
+            console.log("Realtime Update:", ctx.data);
+            const leadId = ctx.data.lead_id;
+            const newStatus = ctx.data.status;
+            
+            // Find the row and update it visually
+            const row = document.getElementById('lead-row-' + leadId);
+            if(row) {
+                const statusBadge = row.querySelector('.lead-status');
+                statusBadge.textContent = newStatus;
+                
+                // Update badge color
+                statusBadge.className = 'lead-status badge';
+                if(newStatus === 'PENDING') statusBadge.classList.add('badge-secondary');
+                else if(newStatus === 'CALLING') statusBadge.classList.add('badge-warning');
+                else if(newStatus === 'ANSWERED') statusBadge.classList.add('badge-success');
+                else statusBadge.classList.add('badge-danger');
+            }
+        });
+
+        sub.subscribe();
+    });
+</script>
 {% endblock %}

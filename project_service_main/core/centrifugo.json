@@ -1,0 +1,6 @@
+{
+  "token_hmac_secret_key": "my_secret",
+  "admin_password": "password",
+  "admin_secret": "admin_secret",
+  "api_key": "api_key"
+}

@@ -70,10 +70,28 @@ async def dial_lead_workflow(ctx, step):
             return {"status": "failed", "reason": "no_ai_agent"}
         
         ai = campaign.agent_group.ai_agent
-        room_name = f"outbound_{campaign_id}_{lead_id}"
+        from livekit import api
         
-        # 1. Trigger SIP Dial via LiveKit Server (Mocked logic here until full SIP API integration)
-        # For example: livekit_api.RoomServiceClient(...).create_sip_participant(sip_trunk_id, phone_number, room_name)
+        # 1. Trigger SIP Dial via LiveKit Server
+        lkapi = api.LiveKitAPI(settings.LIVEKIT_URL, settings.LIVEKIT_API_KEY, settings.LIVEKIT_API_SECRET)
+        try:
+            # We assume campaign.sip_trunk contains SIP trunk ID or configuration needed
+            # In a real LiveKit setup, we'd use SIP Trunk ID
+            sip_trunk_id = campaign.sip_trunk.provider_id if hasattr(campaign.sip_trunk, 'provider_id') else ""
+            
+            await lkapi.sip.create_sip_participant(
+                api.CreateSIPParticipantRequest(
+                    sip_trunk_id=sip_trunk_id,
+                    sip_call_to=phone_number,
+                    room_name=room_name,
+                    participant_identity=f"sip_{lead_id}"
+                )
+            )
+        except Exception as e:
+            await lkapi.aclose()
+            return {"status": "failed", "reason": str(e)}
+        
+        await lkapi.aclose()
         
         # 2. Publish to Redis to summon the AI Worker to this room
         r = redis.from_url(settings.REDIS_URL)
