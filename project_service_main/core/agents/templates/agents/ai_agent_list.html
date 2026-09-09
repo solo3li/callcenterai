@@ -1,0 +1,49 @@
+{% extends 'core/base.html' %}
+{% block page_title %}AI Agents{% endblock %}
+
+{% block content %}
+<div class="mb-4" style="display: flex; justify-content: space-between; align-items: center;">
+    <h3 class="text-muted">Manage your AI Agents</h3>
+    <a href="{% url 'ai_agent_create' %}" class="btn btn-primary">Create AI Agent</a>
+</div>
+
+<div class="card" style="padding: 0; overflow: hidden;">
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead style="background-color: var(--bg-color); border-bottom: 1px solid var(--border-color);">
+            <tr>
+                <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">Name</th>
+                <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">Voice</th>
+                <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">Language</th>
+                <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">Status</th>
+                <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for agent in ai_agents %}
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 16px 24px; font-weight: 500;">{{ agent.name }}</td>
+                <td style="padding: 16px 24px; color: var(--text-secondary);">{{ agent.get_gemini_voice_display }}</td>
+                <td style="padding: 16px 24px; color: var(--text-secondary);">{{ agent.get_language_display }}</td>
+                <td style="padding: 16px 24px;">
+                    {% if agent.is_active %}
+                        <span style="color: green; font-weight: bold;">Active</span>
+                    {% else %}
+                        <span style="color: gray;">Inactive</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 16px 24px;">
+                    <a href="{% url 'ai_agent_update' agent.pk %}" style="color: var(--accent-color); text-decoration: none; margin-right: 12px;">Edit</a>
+                    <a href="{% url 'ai_agent_delete' agent.pk %}" style="color: red; text-decoration: none;">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="padding: 32px 24px; text-align: center; color: var(--text-secondary);">
+                    No AI Agents found. Click "Create AI Agent" to configure one.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

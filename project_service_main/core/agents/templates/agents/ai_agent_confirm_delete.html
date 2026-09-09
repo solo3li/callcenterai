@@ -1,0 +1,17 @@
+{% extends 'core/base.html' %}
+{% block page_title %}Delete AI Agent{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px;">
+    <h3 class="mb-4" style="color: red;">Confirm Deletion</h3>
+    <p class="mb-4">Are you sure you want to delete the AI Agent <strong>{{ object.name }}</strong>? This action cannot be undone and any assigned tasks or numbers may break.</p>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+            <button type="submit" class="btn" style="background: red; color: white;">Yes, Delete</button>
+            <a href="{% url 'ai_agent_list' %}" class="btn" style="background: var(--bg-color); color: var(--text-primary);">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

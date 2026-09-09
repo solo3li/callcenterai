@@ -1,0 +1,62 @@
+{% extends 'core/base.html' %}
+{% block page_title %}{% if object %}Edit AI Agent{% else %}Create AI Agent{% endif %}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px;">
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label class="form-label" for="id_name">Agent Name</label>
+            <input class="form-control" type="text" name="name" id="id_name" value="{{ form.name.value|default_if_none:'' }}" placeholder="e.g., Sales Assistant" required>
+        </div>
+
+        <div class="form-group" style="display: flex; gap: 16px;">
+            <div style="flex: 1;">
+                <label class="form-label" for="id_gemini_voice">Gemini Voice</label>
+                {{ form.gemini_voice }}
+            </div>
+            <div style="flex: 1;">
+                <label class="form-label" for="id_language">Primary Language</label>
+                {{ form.language }}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="id_temperature">Creativity / Temperature (0.0 to 1.0)</label>
+            <input class="form-control" type="number" step="0.1" min="0.0" max="1.0" name="temperature" id="id_temperature" value="{{ form.temperature.value|default_if_none:'0.7' }}" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="id_system_prompt">System Prompt (Persona Instructions)</label>
+            <textarea class="form-control" name="system_prompt" id="id_system_prompt" rows="8" placeholder="You are a polite AI assistant..." required>{{ form.system_prompt.value|default_if_none:'' }}</textarea>
+            <small style="color: var(--text-secondary); display: block; margin-top: 4px;">Define the agent's personality, boundaries, and how it should answer calls.</small>
+        </div>
+
+        <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 16px;">
+            <input type="checkbox" name="is_active" id="id_is_active" {% if form.is_active.value or not object %}checked{% endif %}>
+            <label class="form-label" for="id_is_active" style="margin: 0;">Is Active</label>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 32px;">
+            <button type="submit" class="btn btn-primary">Save AI Agent</button>
+            <a href="{% url 'ai_agent_list' %}" class="btn" style="background: var(--bg-color); color: var(--text-primary);">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<style>
+    /* Quick fix to make Django select fields match modern inputs */
+    select {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 1rem;
+        background-color: var(--bg-color);
+        color: var(--text-primary);
+        font-family: inherit;
+        outline: none;
+    }
+</style>
+{% endblock %}

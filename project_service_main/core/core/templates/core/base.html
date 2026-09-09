@@ -17,7 +17,10 @@
                     <a href="{% url 'dashboard' %}" class="nav-link">Dashboard</a>
                 </li>
                 <li class="nav-item">
-                    <a href="{% url 'agent_list' %}" class="nav-link">Agents</a>
+                    <a href="{% url 'ai_agent_list' %}" class="nav-link" style="color: var(--accent-color); font-weight: 600;">✨ AI Agents</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'agent_list' %}" class="nav-link">Human Agents</a>
                 </li>
                 <li class="nav-item">
                     <a href="{% url 'agent_group_list' %}" class="nav-link" style="padding-left: 24px; font-size: 0.9em;">- Groups</a>

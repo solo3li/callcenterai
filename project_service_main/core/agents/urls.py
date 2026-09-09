@@ -12,4 +12,10 @@ urlpatterns = [
     path('groups/new/', views.AgentGroupCreateView.as_view(), name='agent_group_create'),
     path('groups/<int:pk>/edit/', views.AgentGroupUpdateView.as_view(), name='agent_group_update'),
     path('groups/<int:pk>/delete/', views.AgentGroupDeleteView.as_view(), name='agent_group_delete'),
+
+    # AI Agents
+    path('ai-agents/', views.AIAgentListView.as_view(), name='ai_agent_list'),
+    path('ai-agents/new/', views.AIAgentCreateView.as_view(), name='ai_agent_create'),
+    path('ai-agents/<int:pk>/edit/', views.AIAgentUpdateView.as_view(), name='ai_agent_update'),
+    path('ai-agents/<int:pk>/delete/', views.AIAgentDeleteView.as_view(), name='ai_agent_delete'),
 ]

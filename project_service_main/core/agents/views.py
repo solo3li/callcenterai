@@ -116,3 +116,27 @@ class AgentGroupDeleteView(LoginRequiredMixin, DeleteView):
     model = AgentGroup
     template_name = 'agents/agent_group_confirm_delete.html'
     success_url = reverse_lazy('agent_group_list')
+
+from .models import AIAgent
+
+class AIAgentListView(LoginRequiredMixin, ListView):
+    model = AIAgent
+    template_name = 'agents/ai_agent_list.html'
+    context_object_name = 'ai_agents'
+
+class AIAgentCreateView(LoginRequiredMixin, CreateView):
+    model = AIAgent
+    fields = ['name', 'system_prompt', 'gemini_voice', 'language', 'temperature', 'is_active']
+    template_name = 'agents/ai_agent_form.html'
+    success_url = reverse_lazy('ai_agent_list')
+
+class AIAgentUpdateView(LoginRequiredMixin, UpdateView):
+    model = AIAgent
+    fields = ['name', 'system_prompt', 'gemini_voice', 'language', 'temperature', 'is_active']
+    template_name = 'agents/ai_agent_form.html'
+    success_url = reverse_lazy('ai_agent_list')
+
+class AIAgentDeleteView(LoginRequiredMixin, DeleteView):
+    model = AIAgent
+    template_name = 'agents/ai_agent_confirm_delete.html'
+    success_url = reverse_lazy('ai_agent_list')
