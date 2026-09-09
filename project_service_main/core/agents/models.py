@@ -49,6 +49,12 @@ class AIAgent(TenantAwareModel):
     language = models.CharField(max_length=20, choices=GEMINI_LANGUAGES, default='ar-EG')
     temperature = models.FloatField(default=0.7, help_text="Values from 0.0 (Strict) to 1.0 (Creative)")
     is_active = models.BooleanField(default=True)
+    knowledge_documents = models.ManyToManyField(
+        'knowledge_base.KnowledgeDocument', 
+        blank=True, 
+        related_name='ai_agents',
+        help_text="Select specific knowledge base documents this AI agent is allowed to search."
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -21,13 +21,16 @@ def delete_document_from_rag(tenant_id, document_id):
     response.raise_for_status()
     return response.json()
 
-def retrieve_knowledge(tenant_id, query):
+def retrieve_knowledge(tenant_id, query, document_ids=None):
     url = f"{settings.RAG_SERVICE_URL}/api/retrieve/"
     headers = {"Authorization": f"Bearer {settings.RAG_INTERNAL_API_KEY}"}
     payload = {
         "tenant_id": tenant_id,
         "query": query
     }
+    if document_ids:
+        payload["document_ids"] = document_ids
+        
     response = requests.post(url, json=payload, headers=headers)
     response.raise_for_status()
     return response.json().get('results', [])

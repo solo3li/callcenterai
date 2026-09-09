@@ -83,7 +83,7 @@ def process_document(document_id):
         doc.status = 'FAILED'
         doc.save()
 
-def retrieve_relevant_chunks(tenant_id, query, top_k=5):
+def retrieve_relevant_chunks(tenant_id, query, top_k=5, document_ids=None):
     """
     Embeds the user query and performs cosine similarity search.
     """
@@ -95,10 +95,12 @@ def retrieve_relevant_chunks(tenant_id, query, top_k=5):
     query_embedding = response.data[0].embedding
     
     # Perform vector search strictly within the tenant's boundaries
-    # pgvector provides an l2_distance or cosine_distance
-    # Django pgvector allows order_by(EmbeddingField.cosine_distance(query_embedding))
+    qs = DocumentChunk.objects.filter(tenant_id=tenant_id)
     
-    chunks = DocumentChunk.objects.filter(tenant_id=tenant_id).order_by(
+    if document_ids:
+        qs = qs.filter(document_id__in=document_ids)
+        
+    chunks = qs.order_by(
         DocumentChunk.embedding.cosine_distance(query_embedding)
     )[:top_k]
     

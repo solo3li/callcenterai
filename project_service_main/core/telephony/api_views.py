@@ -31,6 +31,10 @@ def inbound_webhook(request):
             
             # Publish to Redis for ai_worker to pick up
             r = redis.from_url(settings.REDIS_URL)
+            
+            # Fetch linked knowledge documents
+            rag_docs = list(ai.knowledge_documents.exclude(rag_document_id__isnull=True).values_list('rag_document_id', flat=True))
+            
             payload = {
                 "room_name": room_name,
                 "caller_number": caller_number,
@@ -39,6 +43,8 @@ def inbound_webhook(request):
                 "voice": ai.gemini_voice,
                 "language": ai.language,
                 "temperature": ai.temperature,
+                "tenant_id": f"tenant_{ai.organization.id}",
+                "document_ids": rag_docs
             }
             r.publish("ai_call_queue", json.dumps(payload))
             

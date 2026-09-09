@@ -62,10 +62,11 @@ class RetrieveKnowledgeView(APIView, InternalAuthMixin):
             
         tenant_id = request.data.get('tenant_id')
         query = request.data.get('query')
+        document_ids = request.data.get('document_ids')
         
         if not tenant_id or not query:
             return Response({"error": "tenant_id and query are required"}, status=status.HTTP_400_BAD_REQUEST)
             
-        chunks = retrieve_relevant_chunks(tenant_id, query)
+        chunks = retrieve_relevant_chunks(tenant_id, query, document_ids=document_ids)
         
         return Response({"results": chunks})

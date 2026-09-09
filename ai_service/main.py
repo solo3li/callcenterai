@@ -48,20 +48,60 @@ async def handle_call(payload):
         )
     )
 
-    # Configure Gemini Multimodal Live via GoogleLLMService in Pipecat
-    # Note: Using standard GoogleLLMService for this architecture
-    llm = GoogleLLMService(model="gemini-1.5-flash") # Pipecat translates this internally
+    tenant_id = payload.get("tenant_id")
+    document_ids = payload.get("document_ids", [])
+    
+    # Update system prompt to instruct the AI to use the tool
+    full_prompt = (
+        f"{system_prompt}\n\n"
+        "You have access to a tool called 'search_company_knowledge'. "
+        "If the user asks about specific policies, prices, rules, or details about the company, "
+        "you MUST use this tool to search the company's knowledge base before replying. "
+        "Do not guess. Give the answer based strictly on the retrieved information."
+    )
 
     # Set up the context
-    context = [{"role": "system", "content": system_prompt}]
+    context = [{"role": "system", "content": full_prompt}]
 
-    # In a full pipecat pipeline, you'd have STT -> LLM -> TTS.
-    # Since the user requested Gemini Live (multimodal), we would configure that specific Pipecat class here.
-    # For now, we stub the pipeline setup:
-    
+    # Define the Pipecat tool (function)
+    async def search_company_knowledge(query: str) -> str:
+        logger.info(f"AI is searching knowledge base for: {query}")
+        try:
+            django_url = os.environ.get("DJANGO_URL", "http://host.docker.internal:8000")
+            # We will hit the core rag_client via a new core API, or hit rag_service directly.
+            # Hitting rag_service directly is faster.
+            rag_url = os.environ.get("RAG_SERVICE_URL", "http://host.docker.internal:8002")
+            rag_key = os.environ.get("RAG_INTERNAL_API_KEY", "my_secure_internal_key")
+            
+            async with aiohttp.ClientSession() as session:
+                req_payload = {
+                    "tenant_id": tenant_id,
+                    "query": query,
+                    "document_ids": document_ids
+                }
+                headers = {"Authorization": f"Bearer {rag_key}"}
+                async with session.post(f"{rag_url}/api/retrieve/", json=req_payload, headers=headers) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        results = data.get("results", [])
+                        if not results:
+                            return "No relevant information found in the knowledge base."
+                        return "\n\n".join([f"Source ({r['document']}): {r['text']}" for r in results])
+                    else:
+                        return "Error accessing knowledge base."
+        except Exception as e:
+            logger.error(f"RAG Tool Error: {e}")
+            return f"Error: {e}"
+
+    # Configure Gemini Multimodal Live via GoogleLLMService
+    # Pipecat requires tools to be registered on the LLM service or passed to the context.
+    # We will assume Pipecat's new native tool registration:
+    llm = GoogleLLMService(model="gemini-1.5-flash")
+    llm.register_function("search_company_knowledge", search_company_knowledge)
+
     pipeline = Pipeline([
         transport.input(),
-        # STT, LLM, TTS would go here
+        # STT -> LLM -> TTS ...
         transport.output()
     ])
 
