@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'telephony',
     'campaigns',
     'analytics',
+    'knowledge_base',
 ]
 
 AUTH_USER_MODEL = 'users.User'

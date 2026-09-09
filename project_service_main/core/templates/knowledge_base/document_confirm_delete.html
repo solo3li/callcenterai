@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Delete Document{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Confirm Deletion</h1>
+</div>
+
+<div class="alert alert-danger" style="max-width: 600px;">
+    <h4>Are you sure you want to delete "{{ object.title }}"?</h4>
+    <p>This action will permanently remove the file and instantly wipe all related vector embeddings from the RAG database. Your AI agents will no longer have access to this information.</p>
+    
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Yes, Delete</button>
+        <a href="{% url 'knowledge_document_list' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

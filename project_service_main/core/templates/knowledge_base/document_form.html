@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Upload Document{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Upload Document</h1>
+</div>
+
+<div class="card" style="max-width: 600px;">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            
+            <p class="text-muted small">
+                Note: In production, this form will upload the file directly to your MinIO storage bucket, 
+                and the RAG engine will automatically process it.
+            </p>
+            
+            <button type="submit" class="btn btn-primary">Save & Embed</button>
+            <a href="{% url 'knowledge_document_list' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
