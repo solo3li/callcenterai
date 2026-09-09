@@ -1,12 +1,26 @@
 from django.db import models
 from core.models import TenantAwareModel
 
+GROUP_TYPES = [
+    ('HUMAN', 'Human Agents'),
+    ('AI', 'AI Agent (Automated)'),
+]
+
 class AgentGroup(TenantAwareModel):
     name = models.CharField(max_length=150)
     description = models.TextField(blank=True, null=True)
+    group_type = models.CharField(max_length=10, choices=GROUP_TYPES, default='HUMAN')
+    ai_agent = models.ForeignKey(
+        'AIAgent', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='agent_groups',
+        help_text="Select the AI persona. Only required if Group Type is 'AI'."
+    )
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.get_group_type_display()})"
 
 GEMINI_VOICES = [
     ('Aoede', 'Aoede (Female, smooth)'),

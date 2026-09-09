@@ -12,6 +12,8 @@
         <thead style="background-color: var(--bg-color); border-bottom: 1px solid var(--border-color);">
             <tr>
                 <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">Name</th>
+                <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">Type</th>
+                <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">AI Persona</th>
                 <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">Description</th>
                 <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">Actions</th>
             </tr>
@@ -20,6 +22,14 @@
             {% for group in groups %}
             <tr style="border-bottom: 1px solid var(--border-color);">
                 <td style="padding: 16px 24px; font-weight: 500;">{{ group.name }}</td>
+                <td style="padding: 16px 24px;">
+                    {% if group.group_type == 'AI' %}
+                        <span style="color: var(--accent-color); font-weight: bold;">AI</span>
+                    {% else %}
+                        <span style="color: var(--text-secondary);">Human</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 16px 24px; color: var(--text-secondary);">{{ group.ai_agent.name|default_if_none:"-" }}</td>
                 <td style="padding: 16px 24px; color: var(--text-secondary);">{{ group.description|default_if_none:"-" }}</td>
                 <td style="padding: 16px 24px;">
                     <a href="{% url 'agent_group_update' group.pk %}" style="color: var(--accent-color); text-decoration: none; margin-right: 12px;">Edit</a>

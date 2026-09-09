@@ -1,0 +1,55 @@
+{% extends 'core/base.html' %}
+{% block page_title %}Phone Numbers{% endblock %}
+
+{% block content %}
+<div class="mb-4" style="display: flex; justify-content: space-between; align-items: center;">
+    <h3 class="text-muted">Manage SIP Phone Numbers</h3>
+    <a href="{% url 'phone_number_create' %}" class="btn btn-primary">Add Phone Number</a>
+</div>
+
+<div class="card" style="padding: 0; overflow: hidden;">
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead style="background-color: var(--bg-color); border-bottom: 1px solid var(--border-color);">
+            <tr>
+                <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">Number</th>
+                <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">Routing Group</th>
+                <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">Status</th>
+                <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for number in phone_numbers %}
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 16px 24px; font-weight: 500; font-family: monospace; font-size: 1.1em;">{{ number.number }}</td>
+                <td style="padding: 16px 24px; color: var(--text-secondary);">
+                    {% if number.group %}
+                        <a href="{% url 'agent_group_update' number.group.pk %}" style="text-decoration: none; color: var(--accent-color);">
+                            {{ number.group.name }} ({{ number.group.get_group_type_display }})
+                        </a>
+                    {% else %}
+                        <span style="color: red;">Unassigned</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 16px 24px;">
+                    {% if number.is_active %}
+                        <span style="color: green; font-weight: bold;">Active</span>
+                    {% else %}
+                        <span style="color: gray;">Inactive</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 16px 24px;">
+                    <a href="{% url 'phone_number_update' number.pk %}" style="color: var(--accent-color); text-decoration: none; margin-right: 12px;">Edit</a>
+                    <a href="{% url 'phone_number_delete' number.pk %}" style="color: red; text-decoration: none;">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="padding: 32px 24px; text-align: center; color: var(--text-secondary);">
+                    No Phone Numbers found. Click "Add Phone Number" to link a SIP Trunk number.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

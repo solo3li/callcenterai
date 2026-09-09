@@ -1,0 +1,18 @@
+{% extends 'core/base.html' %}
+{% block page_title %}Delete Phone Number{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px;">
+    <h3 class="mb-4" style="color: red;">Confirm Deletion</h3>
+    <p class="mb-4">Are you sure you want to delete the number <strong>{{ object.number }}</strong>?</p>
+    <p style="color: var(--text-secondary); margin-bottom: 24px;">Deleting this number will stop inbound calls from routing correctly.</p>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div style="display: flex; gap: 12px;">
+            <button type="submit" class="btn" style="background: red; color: white;">Yes, Delete</button>
+            <a href="{% url 'phone_number_list' %}" class="btn" style="background: var(--bg-color); color: var(--text-primary);">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -102,15 +102,39 @@ class AgentGroupListView(LoginRequiredMixin, ListView):
 
 class AgentGroupCreateView(LoginRequiredMixin, CreateView):
     model = AgentGroup
-    fields = ['name', 'description']
+    fields = ['name', 'description', 'group_type', 'ai_agent']
     template_name = 'agents/agent_group_form.html'
     success_url = reverse_lazy('agent_group_list')
 
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Filter ai_agent queryset by organization
+        from core.models import get_current_organization
+        from .models import AIAgent
+        org = get_current_organization()
+        if org:
+            form.fields['ai_agent'].queryset = AIAgent.objects.filter(organization=org)
+        else:
+            form.fields['ai_agent'].queryset = AIAgent.objects.none()
+        return form
+
 class AgentGroupUpdateView(LoginRequiredMixin, UpdateView):
     model = AgentGroup
-    fields = ['name', 'description']
+    fields = ['name', 'description', 'group_type', 'ai_agent']
     template_name = 'agents/agent_group_form.html'
     success_url = reverse_lazy('agent_group_list')
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Filter ai_agent queryset by organization
+        from core.models import get_current_organization
+        from .models import AIAgent
+        org = get_current_organization()
+        if org:
+            form.fields['ai_agent'].queryset = AIAgent.objects.filter(organization=org)
+        else:
+            form.fields['ai_agent'].queryset = AIAgent.objects.none()
+        return form
 
 class AgentGroupDeleteView(LoginRequiredMixin, DeleteView):
     model = AgentGroup
