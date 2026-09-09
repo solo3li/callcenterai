@@ -14,16 +14,19 @@
             <a href="/" class="sidebar-logo">AI Call Center</a>
             <ul class="nav-links">
                 <li class="nav-item">
-                    <a href="/" class="nav-link">Dashboard</a>
+                    <a href="{% url 'dashboard' %}" class="nav-link">Dashboard</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link">Agents</a>
+                    <a href="{% url 'agent_list' %}" class="nav-link">Agents</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link">Customers</a>
+                    <a href="{% url 'agent_group_list' %}" class="nav-link" style="padding-left: 24px; font-size: 0.9em;">- Groups</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link">Settings</a>
+                    <a href="{% url 'customer_list' %}" class="nav-link">Customers</a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'settings_update' %}" class="nav-link">Settings</a>
                 </li>
             </ul>
         </aside>

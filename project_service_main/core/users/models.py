@@ -13,5 +13,12 @@ class User(AbstractUser):
         help_text=_("The organization this user belongs to.")
     )
 
+    agent_groups = models.ManyToManyField(
+        'agents.AgentGroup',
+        blank=True,
+        related_name='agents',
+        help_text=_("The custom agent groups this user belongs to within the organization.")
+    )
+
     def __str__(self):
         return f"{self.username} ({self.organization.name if self.organization else 'No Org'})"

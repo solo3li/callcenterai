@@ -1,0 +1,27 @@
+{% extends 'core/base.html' %}
+{% block page_title %}Organization Settings{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px;">
+    <h3 class="text-muted mb-4">Settings for {{ request.user.organization.name }}</h3>
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label class="form-label" for="id_timezone">Timezone</label>
+            <input class="form-control" type="text" name="timezone" id="id_timezone" value="{{ form.timezone.value|default_if_none:'UTC' }}" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="id_ai_greeting">Default AI Greeting</label>
+            <textarea class="form-control" name="ai_greeting" id="id_ai_greeting" rows="4" placeholder="Hello, how can I help you today?">{{ form.ai_greeting.value|default_if_none:'' }}</textarea>
+            <small style="color: var(--text-secondary); display: block; margin-top: 4px;">This is the standard greeting used by your AI agents unless overridden.</small>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+            <button type="submit" class="btn btn-primary">Save Settings</button>
+            <a href="{% url 'dashboard' %}" class="btn" style="background: var(--bg-color); color: var(--text-primary);">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

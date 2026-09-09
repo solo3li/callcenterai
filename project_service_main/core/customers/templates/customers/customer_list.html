@@ -1,0 +1,41 @@
+{% extends 'core/base.html' %}
+{% block page_title %}Customers{% endblock %}
+
+{% block content %}
+<div class="mb-4" style="display: flex; justify-content: space-between; align-items: center;">
+    <h3 class="text-muted">Manage your customers</h3>
+    <a href="{% url 'customer_create' %}" class="btn btn-primary">Add Customer</a>
+</div>
+
+<div class="card" style="padding: 0; overflow: hidden;">
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead style="background-color: var(--bg-color); border-bottom: 1px solid var(--border-color);">
+            <tr>
+                <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">Name</th>
+                <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">Phone</th>
+                <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">Email</th>
+                <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for customer in customers %}
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 16px 24px; font-weight: 500;">{{ customer.name }}</td>
+                <td style="padding: 16px 24px; color: var(--text-secondary);">{{ customer.phone_number }}</td>
+                <td style="padding: 16px 24px; color: var(--text-secondary);">{{ customer.email }}</td>
+                <td style="padding: 16px 24px;">
+                    <a href="{% url 'customer_update' customer.pk %}" style="color: var(--accent-color); text-decoration: none; margin-right: 12px;">Edit</a>
+                    <a href="{% url 'customer_delete' customer.pk %}" style="color: red; text-decoration: none;">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" style="padding: 32px 24px; text-align: center; color: var(--text-secondary);">
+                    No customers found. Click "Add Customer" to create one.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

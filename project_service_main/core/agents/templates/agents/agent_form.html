@@ -1,0 +1,54 @@
+{% extends 'core/base.html' %}
+{% block page_title %}{% if object %}Edit Agent{% else %}Add Agent{% endif %}{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px;">
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label class="form-label" for="id_username">Username</label>
+            <input class="form-control" type="text" name="username" id="id_username" value="{{ form.username.value|default_if_none:'' }}" required>
+            {% if form.username.errors %}<div style="color: red; font-size: 0.75rem; margin-top: 5px;">{{ form.username.errors }}</div>{% endif %}
+        </div>
+
+        <div class="form-group" style="display: flex; gap: 16px;">
+            <div style="flex: 1;">
+                <label class="form-label" for="id_first_name">First Name</label>
+                <input class="form-control" type="text" name="first_name" id="id_first_name" value="{{ form.first_name.value|default_if_none:'' }}">
+            </div>
+            <div style="flex: 1;">
+                <label class="form-label" for="id_last_name">Last Name</label>
+                <input class="form-control" type="text" name="last_name" id="id_last_name" value="{{ form.last_name.value|default_if_none:'' }}">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="id_email">Email</label>
+            <input class="form-control" type="email" name="email" id="id_email" value="{{ form.email.value|default_if_none:'' }}">
+        </div>
+
+        {% if not object %}
+        <div class="form-group">
+            <label class="form-label" for="id_password">Password</label>
+            <input class="form-control" type="password" name="password" id="id_password" required>
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label class="form-label" for="id_agent_groups">Agent Groups</label>
+            <select class="form-control" name="agent_groups" id="id_agent_groups" multiple style="height: 100px;">
+                {% for group in form.agent_groups.field.queryset %}
+                    <option value="{{ group.pk }}" {% if group in form.instance.agent_groups.all %}selected{% endif %}>{{ group.name }}</option>
+                {% endfor %}
+            </select>
+            <small style="color: var(--text-secondary); display: block; margin-top: 4px;">Hold Ctrl (or Cmd) to select multiple.</small>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+            <button type="submit" class="btn btn-primary">Save Agent</button>
+            <a href="{% url 'agent_list' %}" class="btn" style="background: var(--bg-color); color: var(--text-primary);">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends 'core/base.html' %}
+{% block page_title %}Agent Groups{% endblock %}
+
+{% block content %}
+<div class="mb-4" style="display: flex; justify-content: space-between; align-items: center;">
+    <h3 class="text-muted">Manage your agent groups</h3>
+    <a href="{% url 'agent_group_create' %}" class="btn btn-primary">Add Group</a>
+</div>
+
+<div class="card" style="padding: 0; overflow: hidden;">
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead style="background-color: var(--bg-color); border-bottom: 1px solid var(--border-color);">
+            <tr>
+                <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">Name</th>
+                <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">Description</th>
+                <th style="padding: 16px 24px; font-weight: 600; color: var(--text-secondary);">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for group in groups %}
+            <tr style="border-bottom: 1px solid var(--border-color);">
+                <td style="padding: 16px 24px; font-weight: 500;">{{ group.name }}</td>
+                <td style="padding: 16px 24px; color: var(--text-secondary);">{{ group.description|default_if_none:"-" }}</td>
+                <td style="padding: 16px 24px;">
+                    <a href="{% url 'agent_group_update' group.pk %}" style="color: var(--accent-color); text-decoration: none; margin-right: 12px;">Edit</a>
+                    <a href="{% url 'agent_group_delete' group.pk %}" style="color: red; text-decoration: none;">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" style="padding: 32px 24px; text-align: center; color: var(--text-secondary);">
+                    No groups found. Click "Add Group" to create one.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

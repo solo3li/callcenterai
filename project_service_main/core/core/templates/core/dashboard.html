@@ -11,20 +11,20 @@
 <div class="grid-cols-3">
     <!-- Stat Card 1 -->
     <div class="card">
-        <h4 class="text-muted mb-4">Total Calls Today</h4>
-        <h2>1,245</h2>
+        <h4 class="text-muted mb-4">Total Customers</h4>
+        <h2>{{ total_customers }}</h2>
     </div>
 
     <!-- Stat Card 2 -->
     <div class="card">
-        <h4 class="text-muted mb-4">AI Resolution Rate</h4>
-        <h2>87%</h2>
+        <h4 class="text-muted mb-4">Total Human Agents</h4>
+        <h2>{{ total_agents }}</h2>
     </div>
 
     <!-- Stat Card 3 -->
     <div class="card">
-        <h4 class="text-muted mb-4">Active Human Agents</h4>
-        <h2>12</h2>
+        <h4 class="text-muted mb-4">Total Calls (AI)</h4>
+        <h2>{{ total_calls }}</h2>
     </div>
 </div>
 {% endblock %}

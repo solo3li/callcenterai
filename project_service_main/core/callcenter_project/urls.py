@@ -16,13 +16,21 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.views.generic import TemplateView
 from django.contrib.auth import views as auth_views
+from users import views as user_views
+from core.views import DashboardView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     # Authentication
     path('accounts/login/', auth_views.LoginView.as_view(template_name='users/login.html'), name='login'),
+    path('accounts/signup/', user_views.signup_view, name='signup'),
+    
+    # Apps
+    path('customers/', include('customers.urls')),
+    path('agents/', include('agents.urls')),
+    path('settings/', include('organizations.urls')),
+    
     # Dashboard
-    path('', TemplateView.as_view(template_name='core/dashboard.html'), name='dashboard'),
+    path('', DashboardView.as_view(), name='dashboard'),
 ]

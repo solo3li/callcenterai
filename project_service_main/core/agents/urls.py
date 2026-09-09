@@ -1,0 +1,15 @@
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('', views.AgentListView.as_view(), name='agent_list'),
+    path('new/', views.AgentCreateView.as_view(), name='agent_create'),
+    path('<int:pk>/edit/', views.AgentUpdateView.as_view(), name='agent_update'),
+    path('<int:pk>/delete/', views.AgentDeleteView.as_view(), name='agent_delete'),
+    
+    # Groups
+    path('groups/', views.AgentGroupListView.as_view(), name='agent_group_list'),
+    path('groups/new/', views.AgentGroupCreateView.as_view(), name='agent_group_create'),
+    path('groups/<int:pk>/edit/', views.AgentGroupUpdateView.as_view(), name='agent_group_update'),
+    path('groups/<int:pk>/delete/', views.AgentGroupDeleteView.as_view(), name='agent_group_delete'),
+]

@@ -20,6 +20,7 @@ services:
     ports:
       - "8000:8000"
     environment:
+      - USE_POSTGRES=True
       - POSTGRES_DB=callcenter_db
       - POSTGRES_USER=callcenter_user
       - POSTGRES_PASSWORD=callcenter_pass
