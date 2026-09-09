@@ -62,65 +62,65 @@ def execute_action(action, params_dict):
     resolved_body = resolve_template(action.body_template, params_dict)
     
     response_text = ""
+    max_attempts = action.retry_count + 1
     
-    try:
-        if action.protocol == 'HTTP':
-            # Support GET, POST, PUT, DELETE
-            method = action.http_method.upper() if action.http_method else 'POST'
-            
-            # If JSON body
-            kwargs = {'headers': resolved_headers, 'timeout': action.timeout_seconds}
-            if method in ['POST', 'PUT'] and resolved_body:
-                kwargs['data'] = resolved_body
-                if 'Content-Type' not in [k.title() for k in resolved_headers.keys()]:
-                    resolved_headers['Content-Type'] = 'application/json'
-            
-            resp = requests.request(method, resolved_url, **kwargs)
-            resp.raise_for_status()
-            
-            try:
-                json_resp = resp.json()
-                response_text = extract_response(json_resp, action.response_extractor)
-            except ValueError:
-                # Not JSON
-                response_text = resp.text[:1000] # Limit size if not JSON
+    for attempt in range(max_attempts):
+        try:
+            if action.protocol == 'HTTP':
+                method = action.http_method.upper() if action.http_method else 'POST'
+                kwargs = {'headers': resolved_headers, 'timeout': action.timeout_seconds}
+                if method in ['POST', 'PUT'] and resolved_body:
+                    kwargs['data'] = resolved_body
+                    if 'Content-Type' not in [k.title() for k in resolved_headers.keys()]:
+                        resolved_headers['Content-Type'] = 'application/json'
                 
-        elif action.protocol == 'GRAPHQL':
-            # GraphQL is just HTTP POST with a specific JSON body shape: {"query": "...", "variables": {...}}
-            resolved_headers['Content-Type'] = 'application/json'
-            
-            # Try parsing the resolved_body as JSON, if it's not JSON assume it's just the raw query string
-            try:
-                payload = json.loads(resolved_body)
-            except json.JSONDecodeError:
-                # Wrap it properly
-                payload = {"query": resolved_body, "variables": params_dict}
+                resp = requests.request(method, resolved_url, **kwargs)
+                resp.raise_for_status()
                 
-            resp = requests.post(
-                resolved_url, 
-                json=payload, 
-                headers=resolved_headers, 
-                timeout=action.timeout_seconds
-            )
-            resp.raise_for_status()
-            response_text = extract_response(resp.json(), action.response_extractor)
+                try:
+                    json_resp = resp.json()
+                    response_text = extract_response(json_resp, action.response_extractor)
+                except ValueError:
+                    response_text = resp.text[:1000]
+                    
+            elif action.protocol == 'GRAPHQL':
+                resolved_headers['Content-Type'] = 'application/json'
+                try:
+                    payload = json.loads(resolved_body)
+                except json.JSONDecodeError:
+                    payload = {"query": resolved_body, "variables": params_dict}
+                    
+                resp = requests.post(resolved_url, json=payload, headers=resolved_headers, timeout=action.timeout_seconds)
+                resp.raise_for_status()
+                response_text = extract_response(resp.json(), action.response_extractor)
+                
+            elif action.protocol == 'WEBSOCKET':
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                ws_resp = loop.run_until_complete(
+                    execute_websocket(resolved_url, resolved_body, timeout=action.timeout_seconds)
+                )
+                loop.close()
+                try:
+                    json_resp = json.loads(ws_resp)
+                    response_text = extract_response(json_resp, action.response_extractor)
+                except:
+                    response_text = str(ws_resp)
+                    
+            elif action.protocol == 'GRPC':
+                # gRPC requires Server Reflection to be enabled on the target server 
+                # to dynamically invoke methods without compiled .proto files.
+                # In a full production env, we'd use grpc_requests or similar reflection clients here.
+                response_text = "gRPC reflection is partially implemented. Expecting dynamic JSON to Protobuf serialization."
+                
+            # If we reach here, execution was successful
+            return response_text
             
-        elif action.protocol == 'WEBSOCKET':
-            # Execute async in a sync wrapper
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            ws_resp = loop.run_until_complete(
-                execute_websocket(resolved_url, resolved_body, timeout=action.timeout_seconds)
-            )
-            loop.close()
+        except Exception as e:
+            if attempt == max_attempts - 1:
+                return f"Action Execution Failed after {max_attempts} attempts: {str(e)}"
+            # Wait briefly before retrying
+            import time
+            time.sleep(1)
             
-            try:
-                json_resp = json.loads(ws_resp)
-                response_text = extract_response(json_resp, action.response_extractor)
-            except:
-                response_text = str(ws_resp)
-
-        return response_text
-
-    except Exception as e:
-        return f"Action Execution Failed: {str(e)}"
+    return response_text

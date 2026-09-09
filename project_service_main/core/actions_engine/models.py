@@ -7,6 +7,7 @@ class ActionDefinition(TenantAwareModel):
         ('HTTP', 'HTTP (REST)'),
         ('GRAPHQL', 'GraphQL'),
         ('WEBSOCKET', 'WebSocket'),
+        ('GRPC', 'gRPC'),
     )
     
     METHOD_CHOICES = (
@@ -15,6 +16,8 @@ class ActionDefinition(TenantAwareModel):
         ('PUT', 'PUT'),
         ('DELETE', 'DELETE'),
     )
+
+    version = models.CharField(max_length=10, default='v1', help_text='API Version e.g., v1')
 
     # Function name format for LLM tools
     name = models.CharField(

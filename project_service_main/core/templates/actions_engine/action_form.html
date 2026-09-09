@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Action Configuration{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">{% if object %}Edit Action{% else %}Create Action{% endif %}</h1>
+</div>
+
+<div class="card mb-5">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="mb-3">General Settings</h5>
+                    {{ form.name.label_tag }} {{ form.name }}
+                    <small class="form-text text-muted d-block mb-3">{{ form.name.help_text }}</small>
+                    
+                    {{ form.description.label_tag }} {{ form.description }}
+                    <small class="form-text text-muted d-block mb-3">{{ form.description.help_text }}</small>
+                    
+                    {{ form.protocol.label_tag }} {{ form.protocol }}
+                    <div class="mb-3"></div>
+
+                    {{ form.version.label_tag }} {{ form.version }}
+                    <div class="mb-3"></div>
+                </div>
+                
+                <div class="col-md-6 border-start">
+                    <h5 class="mb-3">Network & Auth</h5>
+                    {{ form.endpoint_url.label_tag }} {{ form.endpoint_url }}
+                    <small class="form-text text-muted d-block mb-3">{{ form.endpoint_url.help_text }}</small>
+
+                    {{ form.http_method.label_tag }} {{ form.http_method }}
+                    <div class="mb-3"></div>
+
+                    {{ form.headers.label_tag }} {{ form.headers }}
+                    <small class="form-text text-muted d-block mb-3">{{ form.headers.help_text }}</small>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="row">
+                <div class="col-md-12">
+                    <h5 class="mb-3">Payload & AI Schema</h5>
+                </div>
+                <div class="col-md-6">
+                    {{ form.body_template.label_tag }} {{ form.body_template }}
+                    <small class="form-text text-muted d-block mb-3">{{ form.body_template.help_text }}</small>
+                </div>
+                <div class="col-md-6">
+                    {{ form.input_schema.label_tag }} {{ form.input_schema }}
+                    <small class="form-text text-muted d-block mb-3">{{ form.input_schema.help_text }}</small>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="row">
+                <div class="col-md-4">
+                    {{ form.response_extractor.label_tag }} {{ form.response_extractor }}
+                    <small class="form-text text-muted d-block mb-3">{{ form.response_extractor.help_text }}</small>
+                </div>
+                <div class="col-md-4">
+                    {{ form.timeout_seconds.label_tag }} {{ form.timeout_seconds }}
+                </div>
+                <div class="col-md-4">
+                    {{ form.retry_count.label_tag }} {{ form.retry_count }}
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary px-5">Save Configuration</button>
+                <a href="{% url 'action_definition_list' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Quick styling to make Django forms look like Bootstrap forms */
+    input[type="text"], input[type="number"], select, textarea {
+        display: block;
+        width: 100%;
+        padding: .375rem .75rem;
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #212529;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #ced4da;
+        appearance: none;
+        border-radius: .25rem;
+    }
+</style>
+{% endblock %}
