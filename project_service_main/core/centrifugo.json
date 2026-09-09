@@ -2,5 +2,16 @@
   "token_hmac_secret_key": "my_secret",
   "admin_password": "password",
   "admin_secret": "admin_secret",
-  "api_key": "api_key"
+  "api_key": "api_key",
+  "namespaces": [
+    {
+      "name": "agent",
+      "presence": true,
+      "history_size": 100,
+      "history_ttl": "24h",
+      "history_recover": true
+    }
+  ],
+  "proxy_disconnect_endpoint": "http://host.docker.internal:8000/api/webhooks/centrifugo/disconnect/",
+  "proxy_disconnect_timeout": "2s"
 }

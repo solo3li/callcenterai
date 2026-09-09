@@ -21,6 +21,7 @@ class AgentStateAPIView(APIView):
             "calls_this_week": [10, 15, 8, 12, 0, 0, 0] # Mon-Sun
         }
         return Response({
+            "user_id": request.user.id,
             "state": profile.state,
             "last_state_change": profile.last_state_change,
             "analytics": analytics
@@ -74,7 +75,7 @@ class TransferCallAPIView(APIView):
         agent.save()
         
         # Publish to centrifugo
-        channel = f"agent_{agent.user.id}"
+        channel = f"agent:user_{agent.user.id}"
         event_data = {
             "type": "incoming_transfer",
             "caller_id": caller_id,

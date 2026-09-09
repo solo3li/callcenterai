@@ -1,11 +1,8 @@
 import requests
-import json
 import logging
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
-
-CENTRIFUGO_API_URL = "http://localhost:8000/api"
-CENTRIFUGO_API_KEY = "my_api_key" # Replace with actual from centrifugo.json
 
 def publish(channel: str, data: dict):
     payload = {
@@ -17,10 +14,10 @@ def publish(channel: str, data: dict):
     }
     headers = {
         "Content-type": "application/json",
-        "Authorization": f"apikey {CENTRIFUGO_API_KEY}"
+        "Authorization": f"apikey {settings.CENTRIFUGO_API_KEY}"
     }
     try:
-        response = requests.post(CENTRIFUGO_API_URL, json=payload, headers=headers)
+        response = requests.post(settings.CENTRIFUGO_URL, json=payload, headers=headers)
         response.raise_for_status()
         return response.json()
     except Exception as e:

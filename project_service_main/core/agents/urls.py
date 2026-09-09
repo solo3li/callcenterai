@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from . import api_views
+from . import api_views_centrifugo
 
 urlpatterns = [
     path('', views.AgentListView.as_view(), name='agent_list'),
@@ -23,4 +24,8 @@ urlpatterns = [
     # API endpoints for Human Support (Phase 5)
     path('api/me/state/', api_views.AgentStateAPIView.as_view(), name='api_agent_state'),
     path('api/transfer/', api_views.TransferCallAPIView.as_view(), name='api_agent_transfer'),
+
+    # API endpoints for Realtime Comm (Phase 6)
+    path('api/me/centrifugo-token/', api_views_centrifugo.CentrifugoTokenAPIView.as_view(), name='api_centrifugo_token'),
+    path('api/webhooks/centrifugo/disconnect/', api_views_centrifugo.CentrifugoDisconnectWebhookAPIView.as_view(), name='api_centrifugo_webhook_disconnect'),
 ]
