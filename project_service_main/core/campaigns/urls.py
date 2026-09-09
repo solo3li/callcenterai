@@ -10,5 +10,5 @@ urlpatterns = [
     path('<int:pk>/', views.CampaignDetailView.as_view(), name='campaign-detail'),
     path('<int:pk>/start/', views.start_campaign, name='campaign-start'),
     path('<int:pk>/upload-leads/', views.upload_leads, name='campaign-upload-leads'),
-    path('api/inngest/', serve(inngest_client, [run_campaign_workflow, dial_lead_workflow])),
+    serve(inngest_client, [run_campaign_workflow, dial_lead_workflow]),
 ]

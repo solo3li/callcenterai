@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+import aiohttp
 import redis.asyncio as redis
 from livekit import api
 
@@ -73,6 +74,30 @@ async def handle_call(payload):
 
     runner = PipelineRunner()
     await runner.run(task)
+
+    # After the call ends, send the transcript to the Django backend
+    logger.info(f"Call ended for {room_name}. Saving transcript...")
+    try:
+        # Depending on how the context object is structured in pipecat, extract the strings
+        # Currently context is a list. If it becomes a proper LLMContext, use .get_messages()
+        messages = context if isinstance(context, list) else context.get_messages()
+        transcript_text = "\n".join([f"{m.get('role', 'unknown')}: {m.get('content', '')}" for m in messages])
+        
+        async with aiohttp.ClientSession() as session:
+            data = {
+                "room_name": room_name,
+                "transcript": transcript_text
+            }
+            # Assuming 'web' is the hostname of the django container in docker-compose
+            # or we can use an environment variable for the django URL
+            django_url = os.environ.get("DJANGO_URL", "http://host.docker.internal:8000")
+            async with session.post(f"{django_url}/api/analytics/save-transcript/", json=data) as resp:
+                if resp.status != 200:
+                    logger.error(f"Failed to save transcript: HTTP {resp.status}")
+                else:
+                    logger.info("Transcript saved successfully.")
+    except Exception as e:
+        logger.error(f"Error saving transcript: {e}")
 
 async def main():
     logger.info("Connecting to Redis...")

@@ -3,7 +3,7 @@ import redis
 from django.conf import settings
 from asgiref.sync import sync_to_async
 
-from inngest import step
+from inngest import Step
 from .inngest_client import inngest_client
 from .models import OutboundCampaign, CampaignLead
 
@@ -64,6 +64,8 @@ async def dial_lead_workflow(ctx, step):
     # Mark lead as calling
     await step.run("mark-lead-calling", lambda: update_lead_status(lead_id, 'CALLING'))
     
+    room_name = f"campaign_{campaign_id}_lead_{lead_id}"
+    
     async def execute_dial():
         campaign = await get_campaign_info(campaign_id)
         if not campaign.agent_group or not campaign.agent_group.ai_agent:
@@ -90,6 +92,20 @@ async def dial_lead_workflow(ctx, step):
         except Exception as e:
             await lkapi.aclose()
             return {"status": "failed", "reason": str(e)}
+            
+        # 1.5 Trigger Egress for Recording
+        try:
+            await lkapi.egress.start_room_composite_egress(
+                api.RoomCompositeEgressRequest(
+                    room_name=room_name,
+                    file=api.EncodedFileOutput(
+                        filepath=f"/out/{room_name}.mp4"
+                    )
+                )
+            )
+        except Exception as e:
+            # We don't fail the dial just because egress failed, but we log it
+            print(f"Failed to start egress: {e}")
         
         await lkapi.aclose()
         
