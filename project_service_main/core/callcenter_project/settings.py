@@ -116,6 +116,10 @@ LIVEKIT_URL = os.environ.get('LIVEKIT_URL', 'http://localhost:7880')
 LIVEKIT_API_KEY = os.environ.get('LIVEKIT_API_KEY', 'devkey')
 LIVEKIT_API_SECRET = os.environ.get('LIVEKIT_API_SECRET', 'secret')
 
+# RAG Microservice
+RAG_SERVICE_URL = os.environ.get('RAG_SERVICE_URL', 'http://localhost:8002')
+RAG_INTERNAL_API_KEY = os.environ.get('RAG_INTERNAL_API_KEY', 'my_secure_internal_key')
+
 CENTRIFUGO_URL = os.environ.get('CENTRIFUGO_URL', 'http://localhost:8001/api')
 CENTRIFUGO_API_KEY = os.environ.get('CENTRIFUGO_API_KEY', 'api_key')
 CENTRIFUGO_SECRET = os.environ.get('CENTRIFUGO_SECRET', 'my_secret')
