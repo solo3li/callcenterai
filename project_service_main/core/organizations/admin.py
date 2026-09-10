@@ -3,9 +3,8 @@ from .models import Organization, OrganizationSettings
 
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
-    list_display = ('name', 'created_at')
-    search_fields = ('name',)
+    pass
 
 @admin.register(OrganizationSettings)
 class OrganizationSettingsAdmin(admin.ModelAdmin):
-    list_display = ('organization',)
+    pass
