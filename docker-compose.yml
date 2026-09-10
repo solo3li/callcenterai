@@ -22,8 +22,6 @@ services:
     build: ./project_service_main/core
     container_name: core_web
     command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - ./project_service_main/core:/app
     ports:
       - "8000:8000"
     environment:
@@ -46,6 +44,7 @@ services:
   inngest:
     image: inngest/inngest:latest
     container_name: inngest
+    command: inngest dev
     ports:
       - "8288:8288"
     environment:
@@ -54,10 +53,10 @@ services:
       - callcenter_net
 
   centrifugo:
-    image: centrifugo/centrifugo:v5
+    build: 
+      context: .
+      dockerfile: centrifugo.Dockerfile
     container_name: centrifugo
-    volumes:
-      - ./project_service_main/core/centrifugo.json:/centrifugo/config.json
     command: centrifugo -c config.json
     ports:
       - "8001:8000"
@@ -109,8 +108,6 @@ services:
     build: ./rag_service
     container_name: rag_web
     command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - ./rag_service:/app
     ports:
       - "8002:8000"
     environment:
@@ -143,15 +140,15 @@ services:
       - callcenter_net
 
   livekit-server:
-    image: livekit/livekit-server:latest
+    build:
+      context: .
+      dockerfile: livekit.Dockerfile
     container_name: callcenter_livekit
     command: --config /etc/livekit.yaml
     ports:
       - "7880:7880"
       - "7881:7881"
       - "7882:7882/udp"
-    volumes:
-      - ./ai_service/livekit.yaml:/etc/livekit.yaml
     restart: unless-stopped
     networks:
       - callcenter_net
@@ -160,9 +157,12 @@ services:
     image: livekit/sip:latest
     container_name: callcenter_sip
     environment:
-      - LIVEKIT_URL=ws://livekit-server:7880
-      - LIVEKIT_API_KEY=devkey
-      - LIVEKIT_API_SECRET=secret
+      SIP_CONFIG_BODY: |
+        api_key: devkey
+        api_secret: secret
+        ws_url: ws://livekit-server:7880
+        redis:
+          address: callcenter_redis:6379
     ports:
       - "5060:5060/udp"
       - "5060:5060/tcp"
@@ -176,11 +176,14 @@ services:
     image: livekit/egress:latest
     container_name: callcenter_egress
     environment:
-      - LIVEKIT_URL=ws://livekit-server:7880
-      - LIVEKIT_API_KEY=devkey
-      - LIVEKIT_API_SECRET=secret
+      EGRESS_CONFIG_BODY: |
+        api_key: devkey
+        api_secret: secret
+        ws_url: ws://livekit-server:7880
+        redis:
+          address: callcenter_redis:6379
     volumes:
-      - ./ai_service/egress_output:/out
+      - livekit_egress_data:/out
     depends_on:
       - livekit-server
     restart: unless-stopped
@@ -260,6 +263,7 @@ volumes:
   rag_postgres_data:
   n8n_db_data:
   n8n_data:
+  livekit_egress_data:
 
 networks:
   callcenter_net:
