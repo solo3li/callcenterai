@@ -24,8 +24,9 @@
                 <td style="padding: 16px 24px; color: var(--text-secondary);">{{ customer.phone_number }}</td>
                 <td style="padding: 16px 24px; color: var(--text-secondary);">{{ customer.email }}</td>
                 <td style="padding: 16px 24px;">
-                    <a href="{% url 'customer_update' customer.pk %}" style="color: var(--accent-color); text-decoration: none; margin-right: 12px;">Edit</a>
-                    <a href="{% url 'customer_delete' customer.pk %}" style="color: red; text-decoration: none;">Delete</a>
+                    <a href="{% url 'customer_detail' customer.pk %}" class="btn btn-sm btn-outline-primary">View</a>
+                    <a href="{% url 'customer_update' customer.pk %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                    <a href="{% url 'customer_delete' customer.pk %}" style="color: red; text-decoration: none; margin-left: 12px;">Delete</a>
                 </td>
             </tr>
             {% empty %}

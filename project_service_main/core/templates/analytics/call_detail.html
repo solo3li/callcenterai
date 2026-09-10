@@ -138,6 +138,14 @@
                         <span class="text-muted small text-uppercase">Outcome:</span><br>
                         <span class="badge bg-success fs-6">{{ call.outcome }}</span>
                     </div>
+                    {% if call.tags %}
+                    <div class="mb-3">
+                        <span class="text-muted small text-uppercase">Tags:</span><br>
+                        {% for tag in call.tags %}
+                            <span class="badge bg-secondary me-1">{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                     <div class="mb-3">
                         <span class="text-muted small text-uppercase">Sentiment:</span><br>
                         {{ call.sentiment|default:"Neutral" }}

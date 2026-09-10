@@ -1,0 +1,97 @@
+{% extends "core/base.html" %}
+{% block title %}Customer Profile - {{ customer.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Customer Profile: {{ customer.name }}</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'customer_list' %}" class="btn btn-sm btn-outline-secondary me-2">Back to List</a>
+        <a href="{% url 'customer_update' customer.pk %}" class="btn btn-sm btn-primary">Edit Profile</a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Customer Details Card -->
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white fw-bold">
+                <i class="fas fa-user-circle text-primary"></i> Personal Info
+            </div>
+            <div class="card-body">
+                <p><strong>Phone:</strong> {{ customer.phone_number }}</p>
+                <p><strong>Email:</strong> {{ customer.email|default:"N/A" }}</p>
+                <hr>
+                <p><strong>Notes:</strong><br>{{ customer.notes|default:"No notes available." }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call History Timeline -->
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-history text-primary"></i> Call History</span>
+                <span class="badge bg-secondary">{{ calls.count }} calls</span>
+            </div>
+            <div class="card-body">
+                {% if calls %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Direction</th>
+                                <th>Agent</th>
+                                <th>Status</th>
+                                <th>Outcome</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for call in calls %}
+                            <tr>
+                                <td>{{ call.start_time|date:"Y-m-d H:i" }}</td>
+                                <td>
+                                    {% if call.direction == 'INBOUND' %}
+                                        <span class="text-info"><i class="fas fa-arrow-down"></i> Inbound</span>
+                                    {% else %}
+                                        <span class="text-primary"><i class="fas fa-arrow-up"></i> Outbound</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if call.ai_agent %}
+                                        <i class="fas fa-robot text-primary"></i> {{ call.ai_agent.name }}
+                                    {% elif call.human_agent %}
+                                        <i class="fas fa-user text-success"></i> {{ call.human_agent.username }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if call.status == 'COMPLETED' %}
+                                        <span class="badge bg-success">Completed</span>
+                                    {% elif call.status == 'TRANSFERRED' %}
+                                        <span class="badge bg-warning text-dark">Transferred</span>
+                                    {% elif call.status == 'FAILED' %}
+                                        <span class="badge bg-danger">Failed</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ call.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="small">{{ call.outcome|default:"-" }}</td>
+                                <td>
+                                    <a href="{% url 'call_log_detail' call.id %}" class="btn btn-sm btn-outline-primary">Details</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                    <div class="text-muted text-center py-4">No calls found for this customer.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
