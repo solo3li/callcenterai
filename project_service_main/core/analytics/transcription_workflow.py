@@ -1,7 +1,9 @@
 import os
+import time
+
 import boto3
-import subprocess
-from openai import OpenAI
+from google import genai
+from google.genai import types
 from inngest import Step
 from asgiref.sync import sync_to_async
 from django.conf import settings
@@ -16,6 +18,25 @@ s3_client = boto3.client(
 )
 MINIO_BUCKET = "call-recordings"
 
+TRANSCRIPTION_MODEL = os.environ.get("GEMINI_TRANSCRIPTION_MODEL", "gemini-2.5-flash")
+
+MIME_TYPES = {
+    ".mp4": "video/mp4",
+    ".m4a": "audio/mp4",
+    ".mp3": "audio/mpeg",
+    ".wav": "audio/wav",
+    ".ogg": "audio/ogg",
+    ".webm": "audio/webm",
+}
+
+TRANSCRIPT_PROMPT = (
+    "Transcribe this call recording verbatim. Format every line as "
+    "'[MM:SS] Speaker: text'. Identify the two speakers as 'Customer' and "
+    "'Agent' based on who initiates the call and the content of the "
+    "conversation — if a dedicated audio track per speaker is provided, its "
+    "speaker is '{speaker}'. Output only the transcript, no commentary."
+)
+
 @sync_to_async
 def update_call_log(room_name, transcript, recording_url):
     try:
@@ -29,6 +50,42 @@ def update_call_log(room_name, transcript, recording_url):
     except Exception as e:
         print(f"Error updating call log: {e}")
 
+def _transcribe_with_gemini(filename, speaker_label):
+    """Download a recording from MinIO and transcribe it with Gemini.
+
+    Gemini consumes the audio directly through the Files API (no ffmpeg
+    preprocessing) and diarizes the speakers itself when given a composite
+    track.
+    """
+    client = genai.Client(api_key=settings.GEMINI_API_KEY)
+
+    local_path = f"/tmp/{filename}"
+    s3_client.download_file(MINIO_BUCKET, filename, local_path)
+
+    try:
+        ext = os.path.splitext(filename)[1].lower()
+        mime_type = MIME_TYPES.get(ext, "video/mp4")
+        audio_file = client.files.upload(
+            file=local_path,
+            config=types.UploadFileConfig(mime_type=mime_type),
+        )
+        while audio_file.state == types.FileState.PROCESSING:
+            time.sleep(3)
+            audio_file = client.files.get(name=audio_file.name)
+        if audio_file.state == types.FileState.FAILED:
+            raise RuntimeError(f"Gemini Files API failed to process {filename}")
+
+        prompt = TRANSCRIPT_PROMPT.format(speaker=speaker_label)
+        response = client.models.generate_content(
+            model=TRANSCRIPTION_MODEL,
+            contents=[prompt, audio_file],
+        )
+        return response.text or ""
+    finally:
+        os.remove(local_path)
+        # Delete from MinIO to save space
+        s3_client.delete_object(Bucket=MINIO_BUCKET, Key=filename)
+
 @inngest_client.create_function(
     fn_id="process-call-recording",
     trigger={"event": "analytics/process_recording"}
@@ -36,73 +93,29 @@ def update_call_log(room_name, transcript, recording_url):
 async def process_recording_workflow(ctx, step: Step):
     room_name = ctx.event.data["room_name"]
     files = ctx.event.data.get("files", [])
-    
-    # Normally we'd find the 3 files (composite, customer track, agent track)
-    # Let's assume LiveKit saved them with suffixes
-    composite_file = next((f for f in files if "composite" in f), None)
+
+    # Prefer isolated per-speaker tracks when the egress produced them;
+    # otherwise fall back to the composite recording and let Gemini diarize.
     customer_file = next((f for f in files if "customer" in f), None)
     agent_file = next((f for f in files if "agent" in f), None)
-    
-    if not customer_file or not agent_file:
-        return {"status": "skipped", "reason": "missing_isolated_tracks"}
+    composite_file = next((f for f in files if "composite" in f), None)
 
-    def download_compress_transcribe():
-        # Setup OpenAI
-        client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", "sk-mock"))
-        
-        def process_track(filename, speaker_label):
-            local_path = f"/tmp/{filename}"
-            compressed_path = f"/tmp/compressed_{filename}.mp3"
-            
-            # Download from MinIO
-            s3_client.download_file(MINIO_BUCKET, filename, local_path)
-            
-            # Compress using FFmpeg
-            subprocess.run([
-                "ffmpeg", "-y", "-i", local_path, 
-                "-ac", "1", "-ar", "16000", "-b:a", "32k", 
-                compressed_path
-            ], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            
-            # Transcribe with Whisper
-            with open(compressed_path, "rb") as audio_file:
-                # Assuming valid API key in production
-                try:
-                    transcript = client.audio.transcriptions.create(
-                        model="whisper-1", 
-                        file=audio_file, 
-                        response_format="verbose_json"
-                    )
-                    segments = transcript.segments
-                except Exception as e:
-                    # Mock segments if API fails or key is missing
-                    print("OpenAI Whisper Error:", e)
-                    segments = [{"start": 0.0, "text": f"Mock {speaker_label} text due to missing key"}]
-                    
-            # Cleanup
-            os.remove(local_path)
-            os.remove(compressed_path)
-            # Delete from MinIO to save space
-            s3_client.delete_object(Bucket=MINIO_BUCKET, Key=filename)
-            
-            return [{"speaker": speaker_label, "start": s['start'], "text": s['text']} for s in segments]
-        
-        # Process both
-        customer_segments = process_track(customer_file, "Customer")
-        agent_segments = process_track(agent_file, "Agent")
-        
-        # Merge by timestamp
-        all_segments = customer_segments + agent_segments
-        all_segments.sort(key=lambda x: x["start"])
-        
-        # Format
-        final_transcript = "\n".join([f"[{s['start']:.1f}s] {s['speaker']}: {s['text'].strip()}" for s in all_segments])
-        return final_transcript
-        
-    transcript = await step.run("download-compress-transcribe", download_compress_transcribe)
-    
+    def transcribe_all():
+        if not settings.GEMINI_API_KEY:
+            raise RuntimeError("GEMINI_API_KEY is not configured")
+        sections = []
+        if customer_file and agent_file:
+            sections.append(_transcribe_with_gemini(customer_file, "Customer"))
+            sections.append(_transcribe_with_gemini(agent_file, "Agent"))
+            return "\n".join(sections)
+        if composite_file:
+            return _transcribe_with_gemini(composite_file, "Agent")
+        raise FileNotFoundError("No recording files found in the event payload")
+
+    transcript = await step.run("transcribe-recordings", transcribe_all)
+
     # Finalize
     recording_url = f"http://localhost:9000/{MINIO_BUCKET}/{composite_file}" if composite_file else ""
     await step.run("update-call-log", lambda: update_call_log(room_name, transcript, recording_url))
-    
+
     return {"status": "success", "transcript_length": len(transcript)}

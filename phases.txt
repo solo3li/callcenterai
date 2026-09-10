@@ -198,36 +198,7 @@ PHASE 13 — BILLING
 - Billing history
 - Subscription lifecycle
 
-PHASE 14 — ADMIN & SECURITY
-- Admin dashboard
-- Organization management
-- User management
-- Agent management
-- Group management
-- AI agent management
-- SIP management
-- Knowledge management
-- Action management
-- Workflow management
-- RBAC
-- Tenant isolation
-- Audit logs
-- Rate limiting
-- Secret management
 
-PHASE 15 — OBSERVABILITY
-- Centralized logging
-- Metrics
-- Health checks
-- Error tracking
-- Call monitoring
-- AI worker monitoring
-- SIP monitoring
-- Database monitoring
-- Usage monitoring
-- Alerting
-- Audit monitoring
-
-PHASE 16 — PRODUCTION / SCALE
+PHASE 14 — PRODUCTION / SCALE
 - Docker
 - HTTPS

@@ -90,7 +90,11 @@ DATABASES = {
 
 TIKA_URL = os.environ.get('TIKA_URL', 'http://localhost:9998')
 INTERNAL_API_KEY = os.environ.get('INTERNAL_API_KEY', 'my_secure_internal_key')
-OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', 'sk-mock')
+
+# Gemini embeddings (gemini-embedding-001 @ 1536 dims)
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
+EMBEDDING_MODEL = os.environ.get('EMBEDDING_MODEL', 'gemini-embedding-001')
+EMBEDDING_DIMENSIONS = int(os.environ.get('EMBEDDING_DIMENSIONS', '1536'))
 
 
 

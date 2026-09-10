@@ -124,6 +124,12 @@ LIVEKIT_API_SECRET = os.environ.get('LIVEKIT_API_SECRET', 'secret')
 RAG_SERVICE_URL = os.environ.get('RAG_SERVICE_URL', 'http://localhost:8002')
 RAG_INTERNAL_API_KEY = os.environ.get('RAG_INTERNAL_API_KEY', 'my_secure_internal_key')
 
+# Internal service-to-service auth (ai_worker -> actions engine)
+INTERNAL_API_KEY = os.environ.get('INTERNAL_API_KEY', 'my_secure_internal_key')
+
+# Google Gemini (post-call transcript analysis, recording transcription)
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
+
 CENTRIFUGO_URL = os.environ.get('CENTRIFUGO_URL', 'http://localhost:8001/api')
 CENTRIFUGO_API_KEY = os.environ.get('CENTRIFUGO_API_KEY', 'api_key')
 CENTRIFUGO_SECRET = os.environ.get('CENTRIFUGO_SECRET', 'my_secret')
