@@ -20,6 +20,7 @@ urlpatterns = [
     path('knowledge/', include('knowledge_base.urls')),
     path('actions/', include('actions_engine.urls')),
     path('workflows/', include('workflows.urls')),
+    path('billing/', include('billing.urls')),
     
     # Dashboard
     path('', DashboardView.as_view(), name='dashboard'),

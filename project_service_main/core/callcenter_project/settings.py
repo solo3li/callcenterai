@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'knowledge_base',
     'actions_engine',
     'workflows',
+    'billing',
 ]
 
 AUTH_USER_MODEL = 'users.User'
