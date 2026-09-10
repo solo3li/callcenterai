@@ -155,7 +155,7 @@
 
 <div class="builder-container">
     <!-- Left: Node Palette -->
-    <div class="node-palette">
+    <div class="node-palette" id="palette">
         <h6>Triggers (AI Lifecycle)</h6>
         <div class="node-item" onclick="setTrigger('PRE_CALL')">
             <i class="fas fa-phone-volume text-success"></i>
@@ -171,90 +171,65 @@
         </div>
         
         <h6 class="mt-4">Integrations (n8n)</h6>
-        <!-- These would ideally be populated dynamically from GET /rest/node-types -->
-        <div class="node-item" onclick="addNode('telegram', 'Telegram', 'fab fa-telegram', 'Send messages via Telegram Bot')">
-            <i class="fab fa-telegram"></i>
-            <div>Telegram</div>
-        </div>
-        <div class="node-item" onclick="addNode('slack', 'Slack', 'fab fa-slack', 'Post messages to Slack channels')">
-            <i class="fab fa-slack text-warning"></i>
-            <div>Slack</div>
-        </div>
-        <div class="node-item" onclick="addNode('http', 'HTTP Request', 'fas fa-globe', 'Make custom API calls')">
-            <i class="fas fa-globe text-info"></i>
-            <div>HTTP Request</div>
-        </div>
-        <div class="node-item" onclick="addNode('google_sheets', 'Google Sheets', 'fas fa-table', 'Add rows to spreadsheets')">
-            <i class="fas fa-table text-success"></i>
-            <div>Google Sheets</div>
+        <div id="dynamic-palette">
+            <div class="text-center text-muted mt-4"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
         </div>
     </div>
     
     <!-- Center: Canvas -->
     <div class="workflow-canvas" id="canvas">
-        <!-- Trigger Node -->
-        <div class="workflow-step trigger" onclick="editTrigger()">
-            <div class="step-header">
-                <i class="fas fa-bolt step-icon"></i>
-                <div>
-                    <h5 class="step-title" id="trigger-title">Post-Call Trigger</h5>
-                    <p class="step-subtitle">Runs automatically when a call ends.</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="connector"></div>
-        
-        <!-- Add Button -->
-        <div class="add-step-btn" title="Drag an integration from the left or click a node">
-            <i class="fas fa-plus"></i>
-        </div>
+        <!-- Rendered via JS -->
     </div>
     
     <!-- Right: Properties -->
     <div class="properties-panel" id="properties-panel">
         <h5 id="prop-title" class="mb-4">Properties</h5>
         <div id="prop-form">
-            <!-- Dynamically injected fields -->
             <p class="text-muted">Select a node to edit its properties.</p>
         </div>
     </div>
 </div>
 
 <script>
-    // State management
     let workflow = {
         trigger: 'POST_CALL',
         nodes: []
     };
     
-    // Mock schemas that would normally come from n8n GET /rest/node-types
-    const nodeSchemas = {
-        'telegram': [
-            { name: 'chatId', label: 'Chat ID', type: 'string', placeholder: '@channel or 12345678' },
-            { name: 'text', label: 'Message Text', type: 'text', placeholder: 'Hello from AI!' },
-        ],
-        'slack': [
-            { name: 'channel', label: 'Channel', type: 'string', placeholder: '#general' },
-            { name: 'text', label: 'Message', type: 'text', placeholder: 'Workflow executed.' },
-        ],
-        'http': [
-            { name: 'method', label: 'Method', type: 'select', options: ['GET', 'POST', 'PUT'] },
-            { name: 'url', label: 'URL', type: 'string', placeholder: 'https://api.example.com/data' },
-            { name: 'body', label: 'JSON Body', type: 'text', placeholder: '{"key": "value"}' },
-        ],
-        'google_sheets': [
-            { name: 'sheetId', label: 'Spreadsheet ID', type: 'string', placeholder: '1BxiMVs0XRY...' },
-            { name: 'range', label: 'Range', type: 'string', placeholder: 'Sheet1!A:D' },
-        ]
-    };
-    
+    let loadedIntegrations = [];
     let activeNodeIndex = -1;
+
+    // Load integrations from our backend API on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('/workflows/api/integrations/')
+            .then(res => res.json())
+            .then(data => {
+                loadedIntegrations = data;
+                renderPalette();
+                renderCanvas();
+            })
+            .catch(err => {
+                document.getElementById('dynamic-palette').innerHTML = '<div class="text-danger">Failed to load integrations.</div>';
+            });
+    });
+
+    function renderPalette() {
+        const paletteContainer = document.getElementById('dynamic-palette');
+        let html = '';
+        loadedIntegrations.forEach(integ => {
+            html += `
+                <div class="node-item" onclick="addNode('${integ.id}')">
+                    <i class="${integ.icon} ${integ.color}"></i>
+                    <div>${integ.name}</div>
+                </div>
+            `;
+        });
+        paletteContainer.innerHTML = html;
+    }
 
     function renderCanvas() {
         const canvas = document.getElementById('canvas');
         
-        // Render trigger
         let triggerIcon = 'fa-phone-slash';
         let triggerName = 'Post-Call Trigger';
         let triggerDesc = 'Runs automatically when a call ends.';
@@ -278,16 +253,15 @@
             </div>
         `;
         
-        // Render Nodes
         workflow.nodes.forEach((node, index) => {
             html += `<div class="connector"></div>`;
             html += `
                 <div class="workflow-step" onclick="editNode(${index})">
                     <i class="fas fa-trash delete-step" onclick="event.stopPropagation(); deleteNode(${index})"></i>
                     <div class="step-header">
-                        <i class="${node.icon} step-icon"></i>
+                        <i class="${node.icon} ${node.color} step-icon"></i>
                         <div>
-                            <h5 class="step-title">${node.title}</h5>
+                            <h5 class="step-title">${node.name}</h5>
                             <p class="step-subtitle">${node.desc}</p>
                         </div>
                     </div>
@@ -306,12 +280,16 @@
         renderCanvas();
     }
 
-    function addNode(type, title, icon, desc) {
+    function addNode(integrationId) {
+        const integ = loadedIntegrations.find(i => i.id === integrationId);
+        if(!integ) return;
+        
         workflow.nodes.push({
-            type: type,
-            title: title,
-            icon: icon,
-            desc: desc,
+            integration_id: integ.id,
+            name: integ.name,
+            icon: integ.icon,
+            color: integ.color,
+            desc: integ.description,
             data: {}
         });
         renderCanvas();
@@ -345,10 +323,13 @@
     function editNode(index) {
         activeNodeIndex = index;
         const node = workflow.nodes[index];
-        const schema = nodeSchemas[node.type] || [];
+        const integ = loadedIntegrations.find(i => i.id === node.integration_id);
+        if(!integ) return;
+        
+        const schema = integ.fields || [];
         
         document.getElementById('properties-panel').classList.add('active');
-        document.getElementById('prop-title').innerText = `${node.title} Properties`;
+        document.getElementById('prop-title').innerText = `${node.name} Properties`;
         
         let html = `
             <div class="alert alert-info py-2 small">
@@ -361,11 +342,11 @@
             html += `<div class="mb-3"><label class="form-label fw-bold">${field.label}</label>`;
             
             if (field.type === 'string') {
-                html += `<input type="text" class="form-control" id="prop_${field.name}" placeholder="${field.placeholder}" value="${val}" onchange="saveNodeData('${field.name}', this.value)">`;
+                html += `<input type="text" class="form-control" placeholder="${field.placeholder || ''}" value="${val}" onchange="saveNodeData('${field.name}', this.value)">`;
             } else if (field.type === 'text') {
-                html += `<textarea class="form-control" id="prop_${field.name}" rows="3" placeholder="${field.placeholder}" onchange="saveNodeData('${field.name}', this.value)">${val}</textarea>`;
+                html += `<textarea class="form-control" rows="3" placeholder="${field.placeholder || ''}" onchange="saveNodeData('${field.name}', this.value)">${val}</textarea>`;
             } else if (field.type === 'select') {
-                html += `<select class="form-select" id="prop_${field.name}" onchange="saveNodeData('${field.name}', this.value)">`;
+                html += `<select class="form-select" onchange="saveNodeData('${field.name}', this.value)">`;
                 field.options.forEach(opt => {
                     const sel = (val === opt) ? 'selected' : '';
                     html += `<option value="${opt}" ${sel}>${opt}</option>`;
@@ -375,16 +356,13 @@
             html += `</div>`;
         });
         
-        // Mock credential selector
         html += `
             <hr class="my-4">
             <div class="mb-3">
                 <label class="form-label fw-bold text-primary"><i class="fas fa-key"></i> Credential</label>
                 <select class="form-select">
                     <option>Select existing credential...</option>
-                    <option>My Telegram Token (cred_123)</option>
                 </select>
-                <a href="#" class="small text-decoration-none mt-1 d-block">+ Create new credential</a>
             </div>
         `;
         
@@ -398,9 +376,40 @@
     }
 
     function saveWorkflow() {
-        console.log("Exporting to n8n format:", JSON.stringify(workflow, null, 2));
-        alert("Workflow saved! In a real environment, this JSON is compiled and sent to n8n via POST /api/v1/workflows.");
-        window.location.href = "{% url 'workflow_list' %}";
+        const btn = document.querySelector('button[onclick="saveWorkflow()"]');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deploying...';
+        btn.disabled = true;
+        
+        const payload = {
+            trigger_type: workflow.trigger,
+            nodes: workflow.nodes
+        };
+        
+        fetch('/workflows/api/deploy/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === 'success') {
+                alert("Successfully deployed to n8n backend! Workflow ID: " + data.workflow_id);
+                window.location.href = "{% url 'workflow_list' %}";
+            } else {
+                alert("Error: " + data.error);
+                btn.innerHTML = '<i class="fas fa-save"></i> Save & Deploy to n8n';
+                btn.disabled = false;
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Network error.");
+            btn.innerHTML = '<i class="fas fa-save"></i> Save & Deploy to n8n';
+            btn.disabled = false;
+        });
     }
 
 </script>
