@@ -119,7 +119,9 @@ async def handle_call(payload):
                     req_payload = {
                         "action_name": action_def['name'],
                         "agent_id": agent_id,
-                        "params": kwargs
+                        "params": kwargs,
+                        "type": action_def.get("type", "custom_action"),
+                        "action_id": action_def.get("id")
                     }
                     headers = {"Authorization": f"Bearer {internal_key}"}
                     async with session.post(f"{django_url}/actions/api/internal/actions/execute/", json=req_payload, headers=headers) as resp:
@@ -170,7 +172,8 @@ async def handle_call(payload):
         async with aiohttp.ClientSession() as session:
             data = {
                 "room_name": room_name,
-                "transcript": transcript_text
+                "transcript": transcript_text,
+                "agent_id": agent_id
             }
             # Assuming 'web' is the hostname of the django container in docker-compose
             # or we can use an environment variable for the django URL

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Delete Workflow{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Confirm Workflow Deletion</h1>
+</div>
+
+<div class="alert alert-danger" style="max-width: 600px;">
+    <h4>Are you sure you want to delete the workflow trigger "{{ object.name }}"?</h4>
+    <p>The system will no longer trigger this webhook. The workflow itself will remain in n8n but will not receive events from the Call Center AI.</p>
+    
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Yes, Delete</button>
+        <a href="{% url 'workflow_list' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

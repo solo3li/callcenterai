@@ -35,12 +35,30 @@ def inbound_webhook(request):
             # Fetch linked knowledge documents
             rag_docs = list(ai.knowledge_documents.exclude(rag_document_id__isnull=True).values_list('rag_document_id', flat=True))
             
+            # Execute Pre-Call Workflows (Wait for Context)
+            pre_call_context = ""
+            pre_workflows = ai.workflows.filter(trigger_type='PRE_CALL', is_active=True)
+            for wf in pre_workflows:
+                if wf.webhook_url:
+                    try:
+                        import requests
+                        resp = requests.post(wf.webhook_url, json={"caller_number": caller_number}, timeout=3)
+                        if resp.status_code == 200:
+                            pre_call_context += f"\nWorkflow Context ({wf.name}): {resp.text}"
+                    except Exception as e:
+                        print(f"Pre-call workflow failed: {e}")
+            
+            # Combine System Prompt with Context
+            final_system_prompt = ai.system_prompt
+            if pre_call_context:
+                final_system_prompt += f"\n\n--- CURRENT CALLER CONTEXT ---\n{pre_call_context}\n------------------------------"
+
             payload = {
                 "room_name": room_name,
                 "caller_number": caller_number,
                 "called_number": called_number,
                 "agent_id": ai.id,
-                "system_prompt": ai.system_prompt,
+                "system_prompt": final_system_prompt,
                 "voice": ai.gemini_voice,
                 "language": ai.language,
                 "temperature": ai.temperature,

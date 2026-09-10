@@ -36,10 +36,30 @@ class ActionDefinitionListView(APIView, InternalAuthMixin):
         result = []
         for act in actions:
             result.append({
+                "type": "custom_action",
                 "id": act.id,
                 "name": act.name,
                 "description": act.description,
                 "input_schema": act.input_schema
+            })
+            
+        workflows = agent.workflows.filter(trigger_type='MID_CALL', is_active=True)
+        for wf in workflows:
+            result.append({
+                "type": "n8n_workflow",
+                "id": wf.id,
+                # Sanitize name for Gemini function name constraints (alphanumeric and underscores only)
+                "name": f"workflow_{wf.name.replace(' ', '_').replace('-', '_').lower()}",
+                "description": wf.description or "Triggers a background workflow process.",
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "instructions": {
+                            "type": "string",
+                            "description": "Any extracted instructions or variables the workflow might need"
+                        }
+                    }
+                }
             })
             
         return Response({"actions": result})
@@ -56,13 +76,33 @@ class ActionExecuteView(APIView, InternalAuthMixin):
         agent_id = request.data.get('agent_id')
         params = request.data.get('params', {})
         
-        try:
-            agent = AIAgent.objects.get(id=agent_id)
-            action = agent.actions.get(name=action_name)
-        except (AIAgent.DoesNotExist, ActionDefinition.DoesNotExist):
-            return Response({"error": "Action not permitted for this agent."}, status=status.HTTP_403_FORBIDDEN)
-            
-        # Execute it
-        result_text = execute_action(action, params)
+        action_type = request.data.get('type', 'custom_action')
+        
+        if action_type == 'n8n_workflow':
+            try:
+                agent = AIAgent.objects.get(id=agent_id)
+                workflow_id = request.data.get('action_id') # We should pass ID to be safe
+                wf = agent.workflows.get(id=workflow_id, trigger_type='MID_CALL')
+                
+                # Execute n8n webhook
+                if wf.webhook_url:
+                    import requests
+                    resp = requests.post(wf.webhook_url, json=params, timeout=10)
+                    resp.raise_for_status()
+                    result_text = f"Workflow completed. Result: {resp.text}"
+                else:
+                    result_text = "Workflow URL not configured."
+            except Exception as e:
+                result_text = f"Workflow failed: {str(e)}"
+                
+        else:
+            try:
+                agent = AIAgent.objects.get(id=agent_id)
+                action = agent.actions.get(name=action_name)
+            except (AIAgent.DoesNotExist, ActionDefinition.DoesNotExist):
+                return Response({"error": "Action not permitted for this agent."}, status=status.HTTP_403_FORBIDDEN)
+                
+            # Execute custom action
+            result_text = execute_action(action, params)
         
         return Response({"result": result_text})

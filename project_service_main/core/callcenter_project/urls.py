@@ -12,6 +12,7 @@ urlpatterns = [
     
     # Apps
     path('customers/', include('customers.urls')),
+    path('dashboard/', include('dashboard.urls')),
     path('agents/', include('agents.urls')),
     path('settings/', include('organizations.urls')),
     path('telephony/', include('telephony.urls')),
@@ -19,6 +20,7 @@ urlpatterns = [
     path('analytics/', include('analytics.urls')),
     path('knowledge/', include('knowledge_base.urls')),
     path('actions/', include('actions_engine.urls')),
+    path('workflows/', include('workflows.urls')),
     
     # Dashboard
     path('', DashboardView.as_view(), name='dashboard'),

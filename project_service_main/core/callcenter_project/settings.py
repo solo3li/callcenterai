@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'analytics',
     'knowledge_base',
     'actions_engine',
+    'workflows',
 ]
 
 AUTH_USER_MODEL = 'users.User'

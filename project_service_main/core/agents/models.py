@@ -61,6 +61,12 @@ class AIAgent(TenantAwareModel):
         related_name='ai_agents',
         help_text="Select specific dynamic actions this AI agent is allowed to execute."
     )
+    workflows = models.ManyToManyField(
+        'workflows.Workflow',
+        blank=True,
+        related_name='ai_agents',
+        help_text="Select n8n workflows attached to this agent (Pre/Mid/Post call)."
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
