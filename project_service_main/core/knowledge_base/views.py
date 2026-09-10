@@ -14,7 +14,7 @@ class KnowledgeDocumentListView(LoginRequiredMixin, ListView):
 class KnowledgeDocumentCreateView(LoginRequiredMixin, CreateView):
     model = KnowledgeDocument
     template_name = 'knowledge_base/document_form.html'
-    fields = ['title', 'file_url']
+    fields = ['title', 'file_url', 'document_file']
     success_url = reverse_lazy('knowledge_document_list')
 
     def form_valid(self, form):

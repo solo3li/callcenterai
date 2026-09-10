@@ -175,6 +175,10 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+INTERNAL_HOST_URL = os.environ.get('INTERNAL_HOST_URL', 'http://127.0.0.1:8000')
+
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
