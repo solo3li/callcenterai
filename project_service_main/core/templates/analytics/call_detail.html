@@ -1,0 +1,180 @@
+{% extends "core/base.html" %}
+{% block title %}Call Details - {{ call.phone_number }}{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    .timeline {
+        border-left: 2px solid #dee2e6;
+        padding-left: 20px;
+        margin-left: 10px;
+        position: relative;
+    }
+    .timeline-event {
+        margin-bottom: 20px;
+        position: relative;
+    }
+    .timeline-event::before {
+        content: '';
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        background: #0d6efd;
+        border-radius: 50%;
+        left: -27px;
+        top: 5px;
+    }
+    .transcript-bubble {
+        padding: 10px 15px;
+        border-radius: 15px;
+        margin-bottom: 15px;
+        max-width: 80%;
+    }
+    .bubble-ai {
+        background: #f1f8ff;
+        border: 1px solid #cce5ff;
+        margin-right: auto;
+        border-bottom-left-radius: 2px;
+    }
+    .bubble-user {
+        background: #e2f0e6;
+        border: 1px solid #c3e6cb;
+        margin-left: auto;
+        border-bottom-right-radius: 2px;
+    }
+</style>
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Call Details: {{ call.phone_number }}</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'call_log_list' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Logs
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Left Column: Audio & Transcript -->
+    <div class="col-md-7">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white fw-bold">
+                <i class="fas fa-headphones text-primary"></i> Audio Recording
+            </div>
+            <div class="card-body text-center">
+                {% if call.recording_url %}
+                    <audio controls style="width: 100%;">
+                        <source src="{{ call.recording_url }}" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                {% else %}
+                    <div class="text-muted p-3">
+                        <i class="fas fa-microphone-slash fa-2x mb-2"></i><br>
+                        No recording available for this call.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white fw-bold">
+                <i class="fas fa-comment-dots text-primary"></i> Transcript
+            </div>
+            <div class="card-body" style="height: 500px; overflow-y: auto; background: #f8f9fa;">
+                {% if call.transcript %}
+                    <!-- We assume transcript might be formatted like "Agent: Hello\nUser: Hi" -->
+                    <!-- A simple filter to render it nicely if it's plain text. For now we just use linebreaks -->
+                    <div class="font-monospace small">
+                        {{ call.transcript|linebreaks }}
+                    </div>
+                {% else %}
+                    <div class="text-muted text-center p-5">
+                        Transcript not available.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Metadata, Summary, Timeline -->
+    <div class="col-md-5">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white fw-bold">
+                <i class="fas fa-info-circle text-primary"></i> Call Metadata
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Date & Time</span>
+                    <strong>{{ call.start_time|date:"Y-m-d H:i" }}</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Direction</span>
+                    <strong>{{ call.get_direction_display }}</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Duration</span>
+                    <strong>{{ call.duration }} seconds</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Status</span>
+                    <strong>{{ call.get_status_display }}</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Handled By</span>
+                    <strong>
+                        {% if call.ai_agent %}<i class="fas fa-robot text-primary"></i> {{ call.ai_agent.name }}{% endif %}
+                        {% if call.human_agent %}<i class="fas fa-user text-success"></i> {{ call.human_agent.username }}{% endif %}
+                    </strong>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white fw-bold">
+                <i class="fas fa-brain text-purple"></i> AI Post-Call Summary
+            </div>
+            <div class="card-body">
+                {% if call.summary %}
+                    <div class="mb-3">
+                        <span class="text-muted small text-uppercase">Outcome:</span><br>
+                        <span class="badge bg-success fs-6">{{ call.outcome }}</span>
+                    </div>
+                    <div class="mb-3">
+                        <span class="text-muted small text-uppercase">Sentiment:</span><br>
+                        {{ call.sentiment|default:"Neutral" }}
+                    </div>
+                    <div>
+                        <span class="text-muted small text-uppercase">Summary:</span>
+                        <p class="mb-0">{{ call.summary }}</p>
+                    </div>
+                {% else %}
+                    <div class="text-muted">Summary is pending or not generated.</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-white fw-bold">
+                <i class="fas fa-stream text-primary"></i> Event Timeline
+            </div>
+            <div class="card-body">
+                {% if events %}
+                    <div class="timeline mt-2">
+                        {% for event in events %}
+                        <div class="timeline-event">
+                            <strong class="d-block">{{ event.event_type }}</strong>
+                            <small class="text-muted">{{ event.timestamp|time:"H:i:s" }}</small>
+                            <p class="mb-0 small">{{ event.description }}</p>
+                            {% if event.metadata %}
+                                <pre class="bg-light p-2 mt-1 small rounded"><code>{{ event.metadata }}</code></pre>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-muted">No detailed events logged for this call.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

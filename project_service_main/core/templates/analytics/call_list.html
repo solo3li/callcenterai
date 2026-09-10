@@ -1,0 +1,112 @@
+{% extends "core/base.html" %}
+{% block title %}Call Logs{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Call Logs</h1>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" class="form-control" name="q" placeholder="Search phone, room, or outcome..." value="{{ search_q }}">
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="COMPLETED" {% if status_filter == 'COMPLETED' %}selected{% endif %}>Completed</option>
+                    <option value="TRANSFERRED" {% if status_filter == 'TRANSFERRED' %}selected{% endif %}>Transferred</option>
+                    <option value="FAILED" {% if status_filter == 'FAILED' %}selected{% endif %}>Failed</option>
+                    <option value="IN_PROGRESS" {% if status_filter == 'IN_PROGRESS' %}selected{% endif %}>In Progress</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Direction</th>
+                    <th>Phone Number</th>
+                    <th>Agent</th>
+                    <th>Duration</th>
+                    <th>Status</th>
+                    <th>Outcome</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for call in calls %}
+                <tr>
+                    <td>{{ call.start_time|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        {% if call.direction == 'INBOUND' %}
+                            <span class="badge bg-info text-dark"><i class="fas fa-arrow-down"></i> Inbound</span>
+                        {% else %}
+                            <span class="badge bg-primary"><i class="fas fa-arrow-up"></i> Outbound</span>
+                        {% endif %}
+                    </td>
+                    <td class="font-monospace">{{ call.phone_number }}</td>
+                    <td>
+                        {% if call.ai_agent %}
+                            <i class="fas fa-robot text-primary"></i> {{ call.ai_agent.name }}
+                        {% elif call.human_agent %}
+                            <i class="fas fa-user text-success"></i> {{ call.human_agent.username }}
+                        {% else %}
+                            <span class="text-muted">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ call.duration }}s</td>
+                    <td>
+                        {% if call.status == 'COMPLETED' %}
+                            <span class="badge bg-success">Completed</span>
+                        {% elif call.status == 'TRANSFERRED' %}
+                            <span class="badge bg-warning text-dark">Transferred</span>
+                        {% elif call.status == 'FAILED' %}
+                            <span class="badge bg-danger">Failed</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ call.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-truncate" style="max-width: 150px;" title="{{ call.outcome }}">
+                        {{ call.outcome|default:"-" }}
+                    </td>
+                    <td>
+                        <a href="{% url 'call_log_detail' call.id %}" class="btn btn-sm btn-outline-primary">View Details</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-4 text-muted">
+                        No call logs found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if is_paginated %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ search_q }}&status={{ status_filter }}">Previous</a></li>
+        {% endif %}
+        <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+        {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ search_q }}&status={{ status_filter }}">Next</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

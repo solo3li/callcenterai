@@ -13,10 +13,21 @@ class CallLog(TenantAwareModel):
     direction = models.CharField(max_length=20, choices=DIRECTION_CHOICES)
     
     campaign = models.ForeignKey(OutboundCampaign, on_delete=models.SET_NULL, null=True, blank=True, related_name='call_logs')
+    customer = models.ForeignKey('customers.Customer', on_delete=models.SET_NULL, null=True, blank=True, related_name='calls')
+    ai_agent = models.ForeignKey('agents.AIAgent', on_delete=models.SET_NULL, null=True, blank=True, related_name='handled_calls')
+    human_agent = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='handled_calls')
     
     start_time = models.DateTimeField(auto_now_add=True)
     end_time = models.DateTimeField(null=True, blank=True)
     duration = models.IntegerField(default=0, help_text="Duration in seconds")
+    
+    STATUS_CHOICES = (
+        ('IN_PROGRESS', 'In Progress'),
+        ('COMPLETED', 'Completed'),
+        ('TRANSFERRED', 'Transferred'),
+        ('FAILED', 'Failed'),
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='COMPLETED')
     
     recording_url = models.CharField(max_length=500, blank=True)
     transcript = models.TextField(blank=True, help_text="Full text conversation")
@@ -28,3 +39,16 @@ class CallLog(TenantAwareModel):
 
     def __str__(self):
         return f"{self.direction} Call - {self.phone_number} - {self.start_time.strftime('%Y-%m-%d %H:%M')}"
+
+class CallEvent(models.Model):
+    call = models.ForeignKey(CallLog, on_delete=models.CASCADE, related_name='events')
+    timestamp = models.DateTimeField(auto_now_add=True)
+    event_type = models.CharField(max_length=50) # e.g., 'TOOL_CALL', 'TRANSFER', 'WORKFLOW'
+    description = models.TextField()
+    metadata = models.JSONField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['timestamp']
+
+    def __str__(self):
+        return f"{self.event_type} at {self.timestamp}"
