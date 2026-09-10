@@ -121,6 +121,7 @@ services:
       - DJANGO_DEBUG=True
       - TIKA_URL=http://tika:9998
       - INTERNAL_API_KEY=my_secure_internal_key
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
     depends_on:
       - rag_db
       - tika
