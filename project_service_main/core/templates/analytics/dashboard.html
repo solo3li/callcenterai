@@ -1,0 +1,291 @@
+{% extends "core/base.html" %}
+{% block title %}Analytics Dashboard{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    .kpi-card {
+        border-radius: 10px;
+        border: none;
+        color: white;
+        padding: 12px 14px;
+    }
+    .kpi-card .kpi-icon {
+        font-size: 1.1rem;
+        opacity: 0.75;
+        margin-bottom: 4px;
+    }
+    .kpi-card .kpi-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        line-height: 1.2;
+        margin: 0;
+    }
+    .kpi-card .kpi-label {
+        font-size: 0.7rem;
+        opacity: 0.9;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .chart-card {
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .chart-card .card-header {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #495057;
+        padding: 8px 14px;
+        border-bottom: 1px solid #f0f0f0;
+        background: #fff;
+        border-radius: 10px 10px 0 0;
+    }
+    .chart-card .card-body {
+        padding: 10px 14px;
+    }
+</style>
+
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center pt-2 pb-2 mb-3 border-bottom">
+    <h5 class="mb-0 fw-bold">📊 Analytics Dashboard</h5>
+    <a href="{% url 'call_log_export_csv' %}" class="btn btn-sm btn-outline-success">
+        <i class="fas fa-file-csv"></i> Export CSV
+    </a>
+</div>
+
+<!-- KPI Cards Row - compact -->
+<div class="row g-2 mb-3">
+    <div class="col">
+        <div class="kpi-card" style="background: linear-gradient(135deg,#667eea,#764ba2);">
+            <div class="kpi-icon"><i class="fas fa-phone"></i></div>
+            <div class="kpi-value">{{ total_calls }}</div>
+            <div class="kpi-label">Total Calls</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="kpi-card" style="background: linear-gradient(135deg,#f093fb,#f5576c);">
+            <div class="kpi-icon"><i class="fas fa-calendar-alt"></i></div>
+            <div class="kpi-value">{{ calls_this_month }}</div>
+            <div class="kpi-label">Last 30 Days</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="kpi-card" style="background: linear-gradient(135deg,#4facfe,#00f2fe);">
+            <div class="kpi-icon"><i class="fas fa-robot"></i></div>
+            <div class="kpi-value">{{ ai_resolution_rate }}%</div>
+            <div class="kpi-label">AI Resolution</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="kpi-card" style="background: linear-gradient(135deg,#43e97b,#38f9d7);">
+            <div class="kpi-icon"><i class="fas fa-exchange-alt"></i></div>
+            <div class="kpi-value">{{ transfer_rate }}%</div>
+            <div class="kpi-label">Transfer Rate</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="kpi-card" style="background: linear-gradient(135deg,#fa709a,#fee140);">
+            <div class="kpi-icon"><i class="fas fa-clock"></i></div>
+            <div class="kpi-value">{{ avg_duration }}s</div>
+            <div class="kpi-label">Avg Duration</div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="kpi-card" style="background: linear-gradient(135deg,#a18cd1,#fbc2eb);">
+            <div class="kpi-icon"><i class="fas fa-times-circle"></i></div>
+            <div class="kpi-value">{{ failed_calls }}</div>
+            <div class="kpi-label">Failed Calls</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row 1 -->
+<div class="row g-2 mb-3">
+    <div class="col-md-8">
+        <div class="chart-card card h-100">
+            <div class="card-header"><i class="fas fa-chart-line text-primary me-1"></i> Daily Call Volume (Last 30 Days)</div>
+            <div class="card-body">
+                <canvas id="lineChart" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="chart-card card h-100">
+            <div class="card-header"><i class="fas fa-chart-pie text-primary me-1"></i> Call Status Breakdown</div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <canvas id="pieChart" height="130"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row 2 -->
+<div class="row g-2 mb-3">
+    <div class="col-md-4">
+        <div class="chart-card card h-100">
+            <div class="card-header"><i class="fas fa-arrows-alt-h text-primary me-1"></i> Inbound vs Outbound</div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <canvas id="directionChart" height="130"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="chart-card card h-100">
+            <div class="card-header"><i class="fas fa-robot text-primary me-1"></i> Top AI Agents by Calls Handled</div>
+            <div class="card-body">
+                <canvas id="agentChart" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Calls Table -->
+<div class="chart-card card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="fas fa-history text-primary me-1"></i> Recent Calls</span>
+        <a href="{% url 'call_log_list' %}" class="btn btn-xs btn-outline-primary" style="font-size:0.75rem; padding:2px 8px;">View All</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover table-sm mb-0 align-middle" style="font-size:0.82rem;">
+            <thead class="table-light">
+                <tr>
+                    <th>Phone</th>
+                    <th>Direction</th>
+                    <th>Status</th>
+                    <th>Duration</th>
+                    <th>Outcome</th>
+                    <th>Time</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for call in recent_calls %}
+                <tr>
+                    <td class="font-monospace">{{ call.phone_number }}</td>
+                    <td>
+                        {% if call.direction == 'INBOUND' %}
+                            <span class="badge bg-info text-dark" style="font-size:0.7rem;">Inbound</span>
+                        {% else %}
+                            <span class="badge bg-primary" style="font-size:0.7rem;">Outbound</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if call.status == 'COMPLETED' %}<span class="badge bg-success" style="font-size:0.7rem;">Completed</span>
+                        {% elif call.status == 'TRANSFERRED' %}<span class="badge bg-warning text-dark" style="font-size:0.7rem;">Transferred</span>
+                        {% elif call.status == 'FAILED' %}<span class="badge bg-danger" style="font-size:0.7rem;">Failed</span>
+                        {% else %}<span class="badge bg-secondary" style="font-size:0.7rem;">{{ call.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ call.duration }}s</td>
+                    <td class="text-truncate" style="max-width:110px;">{{ call.outcome|default:"-" }}</td>
+                    <td class="text-muted">{{ call.start_time|date:"M d, H:i" }}</td>
+                    <td><a href="{% url 'call_log_detail' call.id %}" class="btn btn-xs btn-outline-secondary" style="font-size:0.72rem; padding:1px 7px;">View</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="text-center text-muted py-3">No calls yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    Chart.defaults.font.size = 11;
+
+    // 1. Line Chart
+    new Chart(document.getElementById('lineChart').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: {{ chart_labels|safe }},
+            datasets: [{
+                label: 'Calls',
+                data: {{ chart_data|safe }},
+                borderColor: '#667eea',
+                backgroundColor: 'rgba(102,126,234,0.08)',
+                tension: 0.4,
+                fill: true,
+                pointRadius: 3,
+                pointBackgroundColor: '#667eea',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+                x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+            }
+        }
+    });
+
+    // 2. Doughnut Chart
+    new Chart(document.getElementById('pieChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Completed', 'Transferred', 'Failed', 'In Progress'],
+            datasets: [{
+                data: [{{ pie_completed }}, {{ pie_transferred }}, {{ pie_failed }}, {{ pie_inprogress }}],
+                backgroundColor: ['#43e97b', '#ffd700', '#f5576c', '#4facfe'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { usePointStyle: true, font: { size: 10 }, padding: 8 } }
+            },
+            cutout: '68%'
+        }
+    });
+
+    // 3. Bar Chart - Direction
+    new Chart(document.getElementById('directionChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ['Inbound', 'Outbound'],
+            datasets: [{
+                data: [{{ inbound_count }}, {{ outbound_count }}],
+                backgroundColor: ['rgba(79,172,254,0.85)', 'rgba(102,126,234,0.85)'],
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+                x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+            }
+        }
+    });
+
+    // 4. Horizontal Bar - Top Agents
+    new Chart(document.getElementById('agentChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: {{ agent_labels|safe }},
+            datasets: [{
+                label: 'Calls Handled',
+                data: {{ agent_data|safe }},
+                backgroundColor: 'rgba(102,126,234,0.8)',
+                borderRadius: 5
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+                y: { grid: { display: false }, ticks: { font: { size: 10 } } }
+            }
+        }
+    });
+</script>
+
+{% endblock %}

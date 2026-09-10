@@ -9,6 +9,10 @@ from .inngest_functions import analyze_transcript_workflow
 urlpatterns = [
     path('api/save-transcript/', api_views.save_transcript, name='save_transcript'),
     serve(inngest_client, [analyze_transcript_workflow]),
+    # Call Logs CRUD
     path('logs/', views.CallLogListView.as_view(), name='call_log_list'),
     path('logs/<int:pk>/', views.CallLogDetailView.as_view(), name='call_log_detail'),
+    path('logs/export/csv/', views.ExportCallsCSVView.as_view(), name='call_log_export_csv'),
+    # Analytics Dashboard
+    path('dashboard/', views.AnalyticsDashboardView.as_view(), name='analytics_dashboard'),
 ]
