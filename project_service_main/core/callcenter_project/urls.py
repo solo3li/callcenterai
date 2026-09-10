@@ -12,7 +12,6 @@ urlpatterns = [
     
     # Apps
     path('customers/', include('customers.urls')),
-    path('dashboard/', include('dashboard.urls')),
     path('agents/', include('agents.urls')),
     path('settings/', include('organizations.urls')),
     path('telephony/', include('telephony.urls')),
